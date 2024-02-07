@@ -1,0 +1,4 @@
+export enum NotificationType {
+  REMINDER = 'REMINDER',
+  GENERAL_NOTIFICATION = 'GENERAL_NOTIFICATION',
+}
