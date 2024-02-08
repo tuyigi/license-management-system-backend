@@ -22,6 +22,7 @@ export class OrganizationService {
   /*
   Create New Organization
    */
+
   async registerOrganization(registerOrganizationDto: RegisterOrganizationDto) {
     try {
       const {

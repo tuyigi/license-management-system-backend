@@ -89,4 +89,21 @@ export class LicenseRequestController {
     response.contentType('application/pdf');
     response.send(file);
   }
+
+  /*
+  Download organization license by Reference
+   */
+
+  @Get('/download/reference/:reference')
+  async downloadOrganizationLicenseByReference(
+    @Param('reference') reference: string,
+    @Res() response: Response,
+  ) {
+    const file =
+      await this.licenseRequestService.downloadOrganizationLicenseByReference(
+        reference,
+      );
+    response.contentType('application/pdf');
+    response.send(file);
+  }
 }

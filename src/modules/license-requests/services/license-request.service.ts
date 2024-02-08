@@ -392,7 +392,7 @@ export class LicenseRequestService {
   }
 
   /*
-  Download Organization license
+  Download Organization license by license request ID
    */
   async downloadOrganizationLicense(licenseId: number) {
     const organizationLicense: OrganizationLicense =
@@ -405,6 +405,30 @@ export class LicenseRequestService {
     if (!organizationLicense)
       throw new NotFoundException(
         `Organization license with ID: ${licenseId} not found`,
+      );
+    return readFileSync(
+      join(
+        process.cwd(),
+        `./src/assets/licenses/${organizationLicense.license_reference_number}.pdf`,
+      ),
+    );
+  }
+
+  /*
+  Download Organization license by license reference number
+ */
+
+  async downloadOrganizationLicenseByReference(licenseNumber: string) {
+    const organizationLicense: OrganizationLicense =
+      await this.organizationLicenseRepository.findOne({
+        where: {
+          license_reference_number: licenseNumber,
+          status: GeneralStatus.ENABLED,
+        },
+      });
+    if (!organizationLicense)
+      throw new NotFoundException(
+        `Organization license with license reference number: ${licenseNumber} not found`,
       );
     return readFileSync(
       join(
