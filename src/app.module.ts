@@ -6,6 +6,7 @@ import { AuthModule } from './modules/authentication/auth.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { LicensesModule } from './modules/licenses/licenses.module';
 import { LicenseRequestModule } from './modules/license-requests/license-request.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { LicenseRequestModule } from './modules/license-requests/license-request
     OrganizationsModule,
     LicensesModule,
     LicenseRequestModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],

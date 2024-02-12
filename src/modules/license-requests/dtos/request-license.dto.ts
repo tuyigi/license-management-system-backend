@@ -14,8 +14,8 @@ export class RequestLicenseDto {
   description: string;
   @IsEnum(LicensePeriodEnum)
   license_period: LicensePeriodEnum;
+  @IsNotEmpty({ message: 'License period count is not defined' })
   @IsNumber()
-  @IsNotEmpty()
   license_period_count: number;
   @IsNumber()
   @IsNotEmpty()
