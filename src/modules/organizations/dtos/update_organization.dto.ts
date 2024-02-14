@@ -9,9 +9,6 @@ export class UpdateOrganizationDto {
   province: string;
   @IsString()
   @IsNotEmpty()
-  district: string;
-  @IsString()
-  @IsNotEmpty()
   representative_name: string;
   @IsString()
   @IsNotEmpty()

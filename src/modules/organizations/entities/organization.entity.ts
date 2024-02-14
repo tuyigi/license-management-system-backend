@@ -23,8 +23,6 @@ export class Organization extends BaseEntity {
   @Column()
   province: string;
   @Column()
-  district: string;
-  @Column()
   representative_name: string;
   @Column()
   representative_phone_number: string;

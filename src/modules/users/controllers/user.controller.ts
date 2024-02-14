@@ -45,4 +45,12 @@ export class UserController {
   ): Promise<ResponseDataDto> {
     return this.userService.getOrganizationUsers(id);
   }
+
+  /*
+  Get All Users
+   */
+  @Get()
+  async getUsers(): Promise<ResponseDataDto> {
+    return this.userService.getUsers();
+  }
 }

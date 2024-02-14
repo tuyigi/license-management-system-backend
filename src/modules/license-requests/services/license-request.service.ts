@@ -151,6 +151,9 @@ export class LicenseRequestService {
     const licenseRequested: LicenseRequest[] =
       await this.licenseRequestRepository.find({
         relations: { organization_id: true, license_id: true },
+        order: {
+          created_at: 'DESC',
+        },
       });
     return new ResponseDataDto(
       licenseRequested,
@@ -372,7 +375,7 @@ export class LicenseRequestService {
       const licensePdfData = {
         license_number: organizationLicenseReferenceNumber,
         organization_name: recordedOrganizationLicense.organization_id.name,
-        organization_address: `${recordedOrganizationLicense.organization_id.province},${recordedOrganizationLicense.organization_id.district}`,
+        organization_address: `${recordedOrganizationLicense.organization_id.province}`,
         license_description: licenseRequest.license_id.description,
         start_date: `${recordedOrganizationLicense.created_at}`,
         expiry_date: `${recordedOrganizationLicense.expires_at}`,

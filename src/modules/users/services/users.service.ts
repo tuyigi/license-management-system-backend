@@ -119,7 +119,7 @@ export class UsersService {
   }
 
   async findByUsername(username: string): Promise<User> {
-    return this.userRepository.findOne({
+    return await this.userRepository.findOne({
       where: { username },
       relations: { role_id: true, organization_id: true },
     });
@@ -142,5 +142,15 @@ export class UsersService {
       200,
       'Organization users fetched successfully',
     );
+  }
+
+  /*
+  Get All Users
+   */
+  async getUsers(): Promise<ResponseDataDto> {
+    const data = await this.userRepository.find({
+      relations: { role_id: true, organization_id: true },
+    });
+    return new ResponseDataDto(data, 200, 'Users fetched successfully');
   }
 }

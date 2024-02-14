@@ -24,7 +24,10 @@ export class ReportService {
     try {
       const qb = await this.organizationRepository
         .createQueryBuilder('organizations')
-        .select('COUNT(*) as total, organizations.organization_type', 'result')
+        .select(
+          'COUNT(*) as total, organizations.organization_type',
+          'organization_type',
+        )
         .groupBy('organizations.organization_type')
         .getRawMany();
       return new ResponseDataDto(
@@ -73,6 +76,30 @@ export class ReportService {
       };
       return new ResponseDataDto(
         responseData,
+        200,
+        `License Request Stats fetched successfully`,
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+  Get license request organization stats
+   */
+
+  async getLicenseRequestOrganizationStats(
+    orgId: number,
+  ): Promise<ResponseDataDto> {
+    try {
+      const qb = await this.licenseRequestRepository
+        .createQueryBuilder('license_requests')
+        .select(' COUNT(*) as total, license_requests.request_status')
+        .where('license_requests.organization_id= :orgId', { orgId })
+        .groupBy('license_requests.request_status')
+        .getRawMany();
+      return new ResponseDataDto(
+        qb,
         200,
         `License Request Stats fetched successfully`,
       );

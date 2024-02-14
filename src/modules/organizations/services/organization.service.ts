@@ -23,13 +23,14 @@ export class OrganizationService {
   Create New Organization
    */
 
-  async registerOrganization(registerOrganizationDto: RegisterOrganizationDto) {
+  async registerOrganization(
+    registerOrganizationDto: RegisterOrganizationDto,
+  ): Promise<ResponseDataDto> {
     try {
       const {
         name,
         tin,
         province,
-        district,
         representative_name,
         representative_phone_number,
         organization_type,
@@ -47,7 +48,6 @@ export class OrganizationService {
       organization.organization_type = organization_type;
       organization.name = name;
       organization.province = province;
-      organization.district = district;
       organization.representative_name = representative_name;
       organization.representative_phone_number = representative_phone_number;
       const savedOrganization =
@@ -73,7 +73,6 @@ export class OrganizationService {
     const {
       name,
       province,
-      district,
       representative_name,
       representative_phone_number,
     } = organizationDto;
@@ -84,7 +83,6 @@ export class OrganizationService {
       throw new NotFoundException(`Organization with id : ${id}`);
     organization.name = name;
     organization.province = province;
-    organization.district = district;
     organization.representative_name = representative_name;
     organization.representative_phone_number = representative_phone_number;
     await this.organizationRepository.save(organization);
