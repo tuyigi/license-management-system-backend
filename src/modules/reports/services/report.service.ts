@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { LicenseRequest } from '../../license-requests/entities/license-request.entity';
 import { User } from '../../users/entities/user.entity';
+import { OrganizationLicense } from '../../organizations/entities/organization_license.entity';
 
 @Injectable()
 export class ReportService {
@@ -15,6 +16,8 @@ export class ReportService {
     private readonly licenseRequestRepository: Repository<LicenseRequest>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(OrganizationLicense)
+    private readonly organizationLicenseRepository: Repository<OrganizationLicense>,
   ) {}
 
   /*
@@ -132,5 +135,35 @@ Get approved license type stats
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
     }
+  }
+
+  /*
+  Report of licenses with day left to their expiration date
+   */
+  async getLicenseReport(year: number): Promise<ResponseDataDto> {
+    const queryBuilder = this.organizationLicenseRepository
+      .createQueryBuilder('organization_licenses')
+      .innerJoin('organization_licenses.license_id', 'license')
+      .innerJoin('organization_licenses.license_request', 'lr')
+      .select([
+        `extract(day from (organization_licenses.expires_at::timestamp - now()::date::timestamp)) as day_left`,
+        'organization_licenses.expires_at',
+        'organization_licenses.license_period',
+        'organization_licenses.license_period_count',
+        'organization_licenses.expires_at',
+        'organization_licenses.license_reference_number',
+        'license.name',
+        'license.description',
+        'license.license_category',
+      ])
+      .where(`EXTRACT(YEAR FROM organization_licenses.expires_at) = :year`, {
+        year,
+      })
+      .andWhere(
+        `extract(day from (organization_licenses.expires_at::timestamp - now()::date::timestamp)) > 0`,
+      )
+      .orderBy('day_left', 'ASC');
+    const result = await queryBuilder.getRawMany();
+    return new ResponseDataDto(result, 200, 'Reports fetched successfully');
   }
 }

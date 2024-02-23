@@ -47,4 +47,14 @@ export class ReportController {
   async getLicenseTypeStats(): Promise<ResponseDataDto> {
     return this.reportService.getApprovedLicenseTypeStats();
   }
+
+  /*
+  Get License Report
+   */
+  @Get('/expires/:year')
+  async getLicenseReportWithDayLeft(
+    @Param('year') year: number,
+  ): Promise<ResponseDataDto> {
+    return this.reportService.getLicenseReport(year);
+  }
 }

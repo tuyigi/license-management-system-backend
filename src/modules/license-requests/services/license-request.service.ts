@@ -328,8 +328,14 @@ export class LicenseRequestService {
           `User ${user.first_name} ${user.last_name} with type ${user.user_type} is not allowed to approve license request`,
         );
       licenseRequest.request_status = LicenseRequestStatus.APPROVED;
-      // record organization license
+      // TODO:  check if it is renewal or new license
       const organizationLicense = new OrganizationLicense();
+      // if (licenseRequest.request_type == LicenseRequestType.RENEWAL) {
+      //   organizationLicense = await this.organizationLicenseRepository.findOne({
+      //     where: { organization_id: licenseRequest.organization_id, license_id: licenseRequest.license_id,   },
+      //   });
+      // }
+      // record organization license
       organizationLicense.license_period_count =
         licenseRequest.license_period_count;
       organizationLicense.license_period = licenseRequest.license_period;
