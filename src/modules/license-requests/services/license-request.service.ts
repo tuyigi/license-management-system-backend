@@ -24,6 +24,7 @@ import { generateQrCode } from '../../../common/utils/generate-qrcode.utils';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { GeneralStatus } from '../../../common/enums/general.enum';
+import { LicenseCategory } from '../../../common/enums/license_category.enum';
 
 @Injectable()
 export class LicenseRequestService {
@@ -136,6 +137,7 @@ export class LicenseRequestService {
     const license_rquests = await this.licenseRequestRepository.find({
       relations: { license_id: true },
       where: { organization_id: { id } },
+      order: { created_at: 'DESC' },
     });
     return new ResponseDataDto(
       license_rquests,
@@ -150,7 +152,7 @@ export class LicenseRequestService {
   async getRequestedLicenses(): Promise<ResponseDataDto> {
     const licenseRequested: LicenseRequest[] =
       await this.licenseRequestRepository.find({
-        relations: { organization_id: true, license_id: true },
+        relations: { organization_id: true, license_id: { vendor: true } },
         order: {
           created_at: 'DESC',
         },
@@ -371,17 +373,22 @@ export class LicenseRequestService {
       await this.requestAuditTrailRepository.save(requestAudit);
       // update license request
       licenseRequest.request_status = LicenseRequestStatus.APPROVED;
-      //  Generate License PDF File from utils
-      const licensePdfData = {
-        license_number: organizationLicenseReferenceNumber,
-        organization_name: recordedOrganizationLicense.organization_id.name,
-        organization_address: `${recordedOrganizationLicense.organization_id.province}`,
-        license_description: licenseRequest.license_id.description,
-        start_date: `${recordedOrganizationLicense.created_at}`,
-        expiry_date: `${recordedOrganizationLicense.expires_at}`,
-        approved_by: `${recordedOrganizationLicense.approved_by.first_name} ${recordedOrganizationLicense.approved_by.last_name}`,
-      };
-      await generateQrCode(licensePdfData);
+      //  Generate License PDF File from utils if license category is institution license
+      if (
+        licenseRequest.license_id.license_category ===
+        LicenseCategory.INSTITUTION_LICENSE
+      ) {
+        const licensePdfData = {
+          license_number: organizationLicenseReferenceNumber,
+          organization_name: recordedOrganizationLicense.organization_id.name,
+          organization_address: `${recordedOrganizationLicense.organization_id.province}`,
+          license_description: licenseRequest.license_id.description,
+          start_date: `${recordedOrganizationLicense.created_at}`,
+          expiry_date: `${recordedOrganizationLicense.expires_at}`,
+          approved_by: `${recordedOrganizationLicense.approved_by.first_name} ${recordedOrganizationLicense.approved_by.last_name}`,
+        };
+        await generateQrCode(licensePdfData);
+      }
       // TODO: Notify organization that their license request was approved
       await this.licenseRequestRepository.save(licenseRequest);
       return new ResponseDataDto(

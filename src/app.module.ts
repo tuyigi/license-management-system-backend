@@ -7,6 +7,7 @@ import { OrganizationsModule } from './modules/organizations/organizations.modul
 import { LicensesModule } from './modules/licenses/licenses.module';
 import { LicenseRequestModule } from './modules/license-requests/license-request.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { VendorsModule } from './modules/vendors/vendors.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ReportsModule } from './modules/reports/reports.module';
     LicensesModule,
     LicenseRequestModule,
     ReportsModule,
+    VendorsModule,
   ],
   controllers: [],
   providers: [],

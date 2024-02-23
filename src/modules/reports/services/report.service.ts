@@ -107,4 +107,30 @@ export class ReportService {
       throw new BadRequestException(`${e.message}`);
     }
   }
+
+  /*
+Get approved license type stats
+ */
+
+  async getApprovedLicenseTypeStats(): Promise<ResponseDataDto> {
+    try {
+      const qb = await this.licenseRequestRepository
+        .createQueryBuilder('license_requests')
+        .innerJoin('license_requests.license_id', 'l')
+        .where('license_requests.request_status = :requestStatus', {
+          requestStatus: 'APPROVED',
+        })
+        .groupBy('l.name')
+        .select(['COUNT(*) as total', 'l.name'])
+        .getRawMany();
+
+      return new ResponseDataDto(
+        qb,
+        200,
+        `License type Stats fetched successfully`,
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
 }

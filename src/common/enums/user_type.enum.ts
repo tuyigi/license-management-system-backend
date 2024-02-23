@@ -2,4 +2,5 @@ export enum UserType {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ORG_ADMIN = 'ORG_ADMIN',
   LICENSE_MANAGER = 'LICENSE_MANAGER',
+  END_USER = 'END_USER',
 }

@@ -6,10 +6,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import { GeneralStatus } from '../../../common/enums/general.enum';
 import { OrganizationLicense } from '../../organizations/entities/organization_license.entity';
-import { LicenseRequest } from '../../license-requests/entities/license-request.entity';
+import { LicenseCategory } from '../../../common/enums/license_category.enum';
+import { Vendor } from '../../vendors/entities/vendor.entity';
 
 @Entity('licenses')
 export class License extends BaseEntity {
@@ -22,10 +25,18 @@ export class License extends BaseEntity {
   @Column()
   description: string;
   @Column({
+    enum: LicenseCategory,
+    default: LicenseCategory.INSTITUTION_LICENSE,
+  })
+  license_category: LicenseCategory;
+  @Column({
     enum: GeneralStatus,
     default: GeneralStatus.ENABLED,
   })
   status: GeneralStatus;
+  @ManyToOne(() => Vendor)
+  @JoinColumn({ name: 'vendor_id' })
+  vendor: Vendor;
   @OneToMany(
     () => OrganizationLicense,
     (organizationLicense) => organizationLicense.license_id,

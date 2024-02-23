@@ -9,12 +9,16 @@ import { License } from '../entities/license.entity';
 import { Repository } from 'typeorm';
 import { CreateLicenceDto } from '../dtos/create_license.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
+import { Vendor } from '../../vendors/entities/vendor.entity';
+import { LicenseCategory } from '../../../common/enums/license_category.enum';
 
 @Injectable()
 export class LicenseService {
   constructor(
     @InjectRepository(License)
     private readonly licenseRepository: Repository<License>,
+    @InjectRepository(Vendor)
+    private readonly vendorRepository: Repository<Vendor>,
   ) {}
 
   /*
@@ -37,6 +41,25 @@ export class LicenseService {
       license.name = name;
       license.code = code;
       license.description = description;
+      license.license_category = createLicenceDto.license_category;
+      /*
+      if its software license category , we add license vendor
+      */
+      let vendor: Vendor = null;
+      if (
+        createLicenceDto.license_category === LicenseCategory.SOFTWARE_LICENSE
+      ) {
+        // check if vendor exists
+        vendor = await this.vendorRepository.findOne({
+          where: { id: createLicenceDto.vendor_id },
+        });
+        if (!vendor)
+          throw new BadRequestException(
+            `vendor with ID ${createLicenceDto.vendor_id} not found`,
+          );
+        license.vendor = vendor;
+      }
+
       const savedLicense = await this.licenseRepository.save(license);
       return new ResponseDataDto(
         savedLicense,
@@ -95,7 +118,10 @@ export class LicenseService {
    */
 
   async getLicenses(): Promise<ResponseDataDto> {
-    const licenses: License[] = await this.licenseRepository.find();
+    const licenses: License[] = await this.licenseRepository.find({
+      order: { created_at: 'DESC' },
+      relations: { vendor: true },
+    });
     return new ResponseDataDto(
       licenses,
       200,

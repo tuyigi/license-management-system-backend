@@ -32,9 +32,19 @@ export class ReportController {
 
   /*
   Get License Request Status Stats of a specific organization
- */
+  */
   @Get('/licenseRequestStatusStats/:orgId')
-  async getLicenseRequestOrganizationStatusStats(@Param('orgId') orgId: number): Promise<ResponseDataDto> {
+  async getLicenseRequestOrganizationStatusStats(
+    @Param('orgId') orgId: number,
+  ): Promise<ResponseDataDto> {
     return this.reportService.getLicenseRequestOrganizationStats(orgId);
+  }
+
+  /*
+  Get License type stats
+  */
+  @Get('/licenseTypeStats')
+  async getLicenseTypeStats(): Promise<ResponseDataDto> {
+    return this.reportService.getApprovedLicenseTypeStats();
   }
 }
