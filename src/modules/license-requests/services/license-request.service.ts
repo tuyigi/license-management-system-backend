@@ -25,6 +25,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { GeneralStatus } from '../../../common/enums/general.enum';
 import { LicenseCategory } from '../../../common/enums/license_category.enum';
+import { LicenseRequestType } from '../../../common/enums/license-request-type.enum';
 
 @Injectable()
 export class LicenseRequestService {
@@ -302,7 +303,7 @@ export class LicenseRequestService {
       requestAudit.user_id = user;
       requestAudit.action_type = ActionType.REJECTED;
       await this.requestAuditTrailRepository.save(requestAudit);
-      // TODO: notify organization about its license request
+      // TODO: notify organization or requester about its license request
       return new ResponseDataDto(
         licenseRequest,
         200,
@@ -329,12 +330,20 @@ export class LicenseRequestService {
         );
       licenseRequest.request_status = LicenseRequestStatus.APPROVED;
       // TODO:  check if it is renewal or new license
-      const organizationLicense = new OrganizationLicense();
-      // if (licenseRequest.request_type == LicenseRequestType.RENEWAL) {
-      //   organizationLicense = await this.organizationLicenseRepository.findOne({
-      //     where: { organization_id: licenseRequest.organization_id, license_id: licenseRequest.license_id,   },
-      //   });
-      // }
+      let organizationLicense: OrganizationLicense = new OrganizationLicense();
+      if (licenseRequest.request_type == LicenseRequestType.RENEWAL) {
+        organizationLicense = await this.organizationLicenseRepository.findOne({
+          relations: { organization_id: true, license_id: true },
+          where: {
+            license_id: { id: licenseRequest.license_id.id },
+            organization_id: { id: licenseRequest.organization_id.id },
+          },
+        });
+        if (!organizationLicense)
+          throw new NotFoundException(
+            `Organization license not found, please request new license with organization id: ${licenseRequest.organization_id.id} and license id: ${licenseRequest.license_id.id}`,
+          );
+      }
       // record organization license
       organizationLicense.license_period_count =
         licenseRequest.license_period_count;
@@ -375,7 +384,7 @@ export class LicenseRequestService {
       const requestAudit = new RequestAuditTrail();
       requestAudit.request_id = licenseRequest;
       requestAudit.user_id = user;
-      requestAudit.action_type = ActionType.REJECTED;
+      requestAudit.action_type = ActionType.APPROVED;
       await this.requestAuditTrailRepository.save(requestAudit);
       // update license request
       licenseRequest.request_status = LicenseRequestStatus.APPROVED;
@@ -395,7 +404,7 @@ export class LicenseRequestService {
         };
         await generateQrCode(licensePdfData);
       }
-      // TODO: Notify organization that their license request was approved
+      // TODO: Notify organization or requester that license request was approved
       await this.licenseRequestRepository.save(licenseRequest);
       return new ResponseDataDto(
         licenseRequest,

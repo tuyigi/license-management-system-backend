@@ -155,6 +155,9 @@ Get approved license type stats
         'license.name',
         'license.description',
         'license.license_category',
+        'organization_licenses.id',
+        'organization_licenses.license_id',
+        'organization_licenses.license_request',
       ])
       .where(`EXTRACT(YEAR FROM organization_licenses.expires_at) = :year`, {
         year,

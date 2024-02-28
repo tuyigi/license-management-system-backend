@@ -8,6 +8,7 @@ import { LicensesModule } from './modules/licenses/licenses.module';
 import { LicenseRequestModule } from './modules/license-requests/license-request.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { VendorsModule } from './modules/vendors/vendors.module';
+import { LdapAuthenticationModule } from './modules/ldap-authentication/ldap-authentication.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { VendorsModule } from './modules/vendors/vendors.module';
     LicenseRequestModule,
     ReportsModule,
     VendorsModule,
+    LdapAuthenticationModule,
   ],
   controllers: [],
   providers: [],

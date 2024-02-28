@@ -24,6 +24,7 @@ export class OrganizationLicense extends BaseEntity {
     () => Organization,
     (organization) => organization.organization_licenses,
   )
+  @JoinColumn({ name: 'organization_id' })
   organization_id: Organization;
   @ManyToOne(() => License, (license) => license.organizations)
   @JoinColumn({ name: 'license_id' })
