@@ -9,6 +9,12 @@ import { LicenseRequestModule } from './modules/license-requests/license-request
 import { ReportsModule } from './modules/reports/reports.module';
 import { VendorsModule } from './modules/vendors/vendors.module';
 import { LdapAuthenticationModule } from './modules/ldap-authentication/ldap-authentication.module';
+import { ContractModule } from './modules/contracts/contract.module';
+import { SystemToolModule } from './modules/system-tools/system-tool.module';
+import { ReportLicenseModule } from './modules/report-license/report-license.module';
+import { SystemFunctionsModule } from './modules/system-functions/system-functions.module';
+import { DepartmentsModule } from './modules/departments/departments.module';
+import { CertificatesModule } from './modules/certificates/certificates.module';
 
 @Module({
   imports: [
@@ -32,6 +38,12 @@ import { LdapAuthenticationModule } from './modules/ldap-authentication/ldap-aut
     ReportsModule,
     VendorsModule,
     LdapAuthenticationModule,
+    ContractModule,
+    SystemToolModule,
+    ReportLicenseModule,
+    SystemFunctionsModule,
+    DepartmentsModule,
+    CertificatesModule,
   ],
   controllers: [],
   providers: [],

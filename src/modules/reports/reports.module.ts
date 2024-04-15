@@ -6,6 +6,7 @@ import { ReportService } from './services/report.service';
 import { LicenseRequest } from '../license-requests/entities/license-request.entity';
 import { User } from '../users/entities/user.entity';
 import { OrganizationLicense } from '../organizations/entities/organization_license.entity';
+import { ReportLicense } from '../report-license/entities/report-license.entity';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { OrganizationLicense } from '../organizations/entities/organization_lice
       LicenseRequest,
       User,
       OrganizationLicense,
+      ReportLicense,
     ]),
   ],
   controllers: [ReportController],

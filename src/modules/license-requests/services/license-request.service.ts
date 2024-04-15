@@ -26,6 +26,7 @@ import { join } from 'path';
 import { GeneralStatus } from '../../../common/enums/general.enum';
 import { LicenseCategory } from '../../../common/enums/license_category.enum';
 import { LicenseRequestType } from '../../../common/enums/license-request-type.enum';
+import { sendEmail } from '../../../common/utils/communication.utils';
 
 @Injectable()
 export class LicenseRequestService {
@@ -117,6 +118,21 @@ export class LicenseRequestService {
       licenseRequest.description = description;
       const savedRequest =
         await this.licenseRequestRepository.save(licenseRequest);
+      /*
+      Notify License manager via email
+       */
+      const manager: User = await this.userRepository.findOne({
+        where: {
+          user_type: UserType.LICENSE_MANAGER,
+          organization_id: { id: organization.id },
+        },
+      });
+      if (manager)
+        await sendEmail(
+          manager.email,
+          `Dear ${manager.first_name} ${manager.last_name}, You have been requested to review the license request of ${license.name}, requested by ${user.first_name} ${user.last_name}`,
+        );
+
       return new ResponseDataDto(
         savedRequest,
         201,
@@ -250,7 +266,11 @@ export class LicenseRequestService {
       const { decision, user_id } = rejectLicenseRequestDto;
       const licenseRequest: LicenseRequest =
         await this.licenseRequestRepository.findOne({
-          relations: { license_id: true, organization_id: true },
+          relations: {
+            license_id: true,
+            organization_id: true,
+            requested_by: true,
+          },
           where: {
             id,
             request_status: LicenseRequestStatus.REVIEWED,
@@ -292,8 +312,6 @@ export class LicenseRequestService {
   ): Promise<ResponseDataDto> {
     try {
       const { reason } = rejectLicenseRequestDto;
-      // check if user provided valid reason for rejection
-      if (!reason) throw new BadRequestException(`Please valid reason`);
       licenseRequest.request_status = LicenseRequestStatus.REJECTED;
       licenseRequest.reason = reason;
       await this.licenseRequestRepository.save(licenseRequest);
@@ -405,6 +423,10 @@ export class LicenseRequestService {
         await generateQrCode(licensePdfData);
       }
       // TODO: Notify organization or requester that license request was approved
+      await sendEmail(
+        licenseRequest.requested_by.email,
+        `Dear ${licenseRequest.requested_by.first_name} ${licenseRequest.requested_by.last_name}, \n Your license request of ${licenseRequest.license_id.name} has been approved by ${user.first_name} ${user.last_name}. \n You can login in the system and check the reports. Regards`,
+      );
       await this.licenseRequestRepository.save(licenseRequest);
       return new ResponseDataDto(
         licenseRequest,

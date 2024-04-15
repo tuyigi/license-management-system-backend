@@ -6,6 +6,7 @@ import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { LicenseRequest } from '../../license-requests/entities/license-request.entity';
 import { User } from '../../users/entities/user.entity';
 import { OrganizationLicense } from '../../organizations/entities/organization_license.entity';
+import { ReportLicense } from '../../report-license/entities/report-license.entity';
 
 @Injectable()
 export class ReportService {
@@ -18,6 +19,8 @@ export class ReportService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(OrganizationLicense)
     private readonly organizationLicenseRepository: Repository<OrganizationLicense>,
+    @InjectRepository(ReportLicense)
+    private readonly reportLicenseRepository: Repository<ReportLicense>,
   ) {}
 
   /*
@@ -168,5 +171,44 @@ Get approved license type stats
       .orderBy('day_left', 'ASC');
     const result = await queryBuilder.getRawMany();
     return new ResponseDataDto(result, 200, 'Reports fetched successfully');
+  }
+
+  /*
+  Get summary of reported license ( license owner)
+   */
+  async getRecordedLicenseSummary(): Promise<ResponseDataDto> {
+    try {
+      const current_year = new Date().getFullYear();
+      const paidLicense = await this.reportLicenseRepository
+        .createQueryBuilder('report_licenses')
+        .where(
+          `EXTRACT(YEAR FROM report_licenses.created_at) = :current_year and payment_status = 'PAID'`,
+          {
+            current_year,
+          },
+        )
+        .getCount();
+      const licenseExpiredMonth = await this.reportLicenseRepository
+        .createQueryBuilder('report_licenses')
+        .where(
+          `extract(day from (report_licenses.end_date::timestamp - now()::date::timestamp)) <= 31 and extract(day from (report_licenses.end_date::timestamp - now()::date::timestamp)) > 0`,
+        )
+        .andWhere(
+          `EXTRACT(YEAR FROM report_licenses.end_date) = :current_year`,
+          { current_year },
+        )
+        .getCount();
+      const data = {
+        paid_license: paidLicense,
+        license_expiration_month: licenseExpiredMonth,
+      };
+      return new ResponseDataDto(
+        data,
+        200,
+        `License summary fetched successfully`,
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
   }
 }

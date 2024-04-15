@@ -121,7 +121,11 @@ export class UsersService {
   async findByUsername(username: string): Promise<User> {
     return await this.userRepository.findOne({
       where: { username },
-      relations: { role_id: true, organization_id: true },
+      relations: {
+        role_id: { privileges: { privilege_id: true } },
+        organization_id: true,
+        department: true,
+      },
     });
   }
 

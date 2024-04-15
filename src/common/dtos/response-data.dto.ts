@@ -5,8 +5,8 @@ export class ResponseDataDto {
   timestamp: string;
   constructor(data?: any | any[], status?: number, message?: string) {
     this.data = data;
-    this.status = status;
-    this.message = message;
+    this.status = status ? status : 200;
+    this.message = message ? message : 'Success';
     this.timestamp = new Date().toISOString();
   }
 }

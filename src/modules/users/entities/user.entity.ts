@@ -14,6 +14,7 @@ import { GeneralStatus } from '../../../common/enums/general.enum';
 import { Organization } from '../../organizations/entities/organization.entity';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from '@nestjs/class-transformer';
+import { DepartmentEntity } from '../../departments/entities/department.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -29,8 +30,8 @@ export class User extends BaseEntity {
   email: string;
   @Column({ length: 10, unique: true })
   phone_number: string;
-  @Exclude()
   @Column()
+  @Exclude()
   password: string;
   @Column({ enum: GeneralStatus, default: GeneralStatus.ENABLED })
   status: GeneralStatus;
@@ -46,6 +47,9 @@ export class User extends BaseEntity {
   created_at: Date;
   @UpdateDateColumn()
   updated_at: Date;
+  @ManyToOne(() => DepartmentEntity)
+  @JoinColumn({ name: 'department' })
+  department: DepartmentEntity;
 
   async validatePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);

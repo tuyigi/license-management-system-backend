@@ -57,4 +57,12 @@ export class ReportController {
   ): Promise<ResponseDataDto> {
     return this.reportService.getLicenseReport(year);
   }
+
+  /*
+  Get summary of reported license ( license owner)
+   */
+  @Get('/recordedLicenseSummary')
+  async getRecordedLicenseSummary(): Promise<ResponseDataDto> {
+    return this.reportService.getRecordedLicenseSummary();
+  }
 }

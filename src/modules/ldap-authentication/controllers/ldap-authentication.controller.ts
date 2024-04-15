@@ -1,6 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { LdapAuthenticationService } from '../services/ldap-authentication.service';
-import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { AuthenticationDto } from '../dtos/authentication.dto';
 
 @Controller('ldapAuthentication')
@@ -11,9 +10,11 @@ export class LdapAuthenticationController {
   LDAP Authentication
    */
   @Post()
+  @HttpCode(200)
   async ldapAuthentication(
     @Body() ldapAuthenticationDto: AuthenticationDto,
-  ): Promise<ResponseDataDto> {
+  ): Promise<any> {
+    // return this.ldapAuthenticationService.authenticate(ldapAuthenticationDto);
     return this.ldapAuthenticationService.ldapAuthentication(
       ldapAuthenticationDto,
     );
