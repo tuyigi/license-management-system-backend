@@ -1,6 +1,8 @@
 /*
 This will handle all communication through the system 
  */
+import * as process from 'process';
+
 export async function sendEmail(email: string, content: string) {
   const axios = require('axios');
   const data = JSON.stringify({
@@ -28,10 +30,9 @@ export async function sendEmail(email: string, content: string) {
   const config = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: 'https://api.sendgrid.com/v3/mail/send',
+    url: `${process.env.SENDGRIP_TOKEN}`,
     headers: {
-      Authorization:
-        'Bearer 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',
+      Authorization: `Bearer ${process.env.SENDGRID_TOKEN}`,
       'Content-Type': 'application/json',
     },
     data: data,
