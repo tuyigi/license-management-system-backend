@@ -99,6 +99,27 @@ export class ReportLicenseService {
   }
 
   /*
+   Get reported license by department
+ */
+  async getRecordedLicenseDepartment(id: number): Promise<ResponseDataDto> {
+    try {
+      const recordedLicenses: ReportLicense[] =
+        await this.reportLicenseRepository.find({
+          where: { payment_period: { contract: { department: { id } } } },
+          order: { created_at: 'DESC' },
+          relations: {
+            payment_period: { contract: { vendor: true, system_tool: true } },
+          },
+        });
+      return new ResponseDataDto(
+        recordedLicenses,
+        200,
+        `Licenses fetched successfully`,
+      );
+    } catch (e) {}
+  }
+
+  /*
   update reported licenses
    */
   async updateReportedLicense(

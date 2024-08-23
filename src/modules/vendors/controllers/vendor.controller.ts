@@ -1,9 +1,18 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { VendorService } from '../services/vendor.service';
 import { RecordVendorDto } from '../dtos/recordVendor.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { ChangeVendorStatusDto } from '../dtos/changeVendorStatus.dto';
-
+import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
+@UseGuards(new JwtAuthGuard())
 @Controller('vendor')
 export class VendorController {
   constructor(private readonly vendorService: VendorService) {}

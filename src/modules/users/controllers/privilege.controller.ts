@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { PrivilegeService } from '../services/privilege.service';
 import { CreatePrivilegeDto } from '../dtos/create-privilege.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
+import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 
+@UseGuards(new JwtAuthGuard())
 @Controller('privilege')
 export class PrivilegeController {
   constructor(private readonly privilegeService: PrivilegeService) {}

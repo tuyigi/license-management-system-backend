@@ -7,6 +7,9 @@ import { LicenseRequest } from '../license-requests/entities/license-request.ent
 import { User } from '../users/entities/user.entity';
 import { OrganizationLicense } from '../organizations/entities/organization_license.entity';
 import { ReportLicense } from '../report-license/entities/report-license.entity';
+import { DepartmentEntity } from '../departments/entities/department.entity';
+import { Contract } from '../contracts/entities/contract.entity';
+import { CertificateEntity } from '../certificates/entities/certificate.entity';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { ReportLicense } from '../report-license/entities/report-license.entity'
       User,
       OrganizationLicense,
       ReportLicense,
+      DepartmentEntity,
+      Contract,
+      CertificateEntity,
     ]),
   ],
   controllers: [ReportController],

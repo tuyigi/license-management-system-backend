@@ -41,15 +41,29 @@ export class CertificatesService {
         throw new NotFoundException(
           `Department with ID:${certificateDto.department_id} not found`,
         );
+      if (
+        new Date(`${certificateDto.issue_date}`).getMilliseconds() >
+        new Date(`${certificateDto.expiration_date}`).getMilliseconds()
+      )
+        throw new BadRequestException(
+          `Expiration date should be greater than issue date`,
+        );
       const certificate: CertificateEntity = new CertificateEntity();
       certificate.certificate = certificateDto.certificate_name;
+      certificate.issue_date = new Date(
+        Date.parse(`${certificateDto.issue_date}`),
+      );
+      certificate.expiry_date = new Date(
+        Date.parse(`${certificateDto.expiration_date}`),
+      );
+      certificate.certificate_type = certificateDto.certificate_type;
       certificate.department_id = department;
       certificate.user_organization = certificateDto.user_organization;
       certificate.description = certificateDto.description;
       const saved = await this.certificateRepository.save(certificate);
       return new ResponseDataDto(saved, 201, 'Certificate added successfully');
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
     }
   }
 
@@ -70,6 +84,21 @@ export class CertificatesService {
           where: { id: certificateDto.department_id },
         });
       if (!department) throw new NotFoundException(`Department not found`);
+
+      if (
+        new Date(`${certificateDto.issue_date}`).getMilliseconds() >
+        new Date(`${certificateDto.expiration_date}`).getMilliseconds()
+      )
+        throw new BadRequestException(
+          `Expiration date should be greater than issue date`,
+        );
+      certificate.issue_date = new Date(
+        Date.parse(`${certificateDto.issue_date}`),
+      );
+      certificate.expiry_date = new Date(
+        Date.parse(`${certificateDto.expiration_date}`),
+      );
+      certificate.certificate_type = certificateDto.certificate_type;
       certificate.department_id = department;
       certificate.description = certificateDto.description;
       certificate.user_organization = certificateDto.user_organization;
@@ -77,7 +106,7 @@ export class CertificatesService {
       await this.certificateRepository.save(certificate);
       return new ResponseDataDto(certificate);
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
     }
   }
 
@@ -88,9 +117,12 @@ export class CertificatesService {
     try {
       const certificates = await this.certificateRepository.find({
         relations: { department_id: true },
+        order: { created_at: 'desc' },
       });
       return new ResponseDataDto(certificates);
-    } catch (e) {}
+    } catch (e) {
+      throw e;
+    }
   }
 
   /*
@@ -106,10 +138,11 @@ export class CertificatesService {
         await this.certificateRepository.find({
           where: { department_id: { id: department.id } },
           relations: { department_id: true },
+          order: { created_at: 'desc' },
         });
       return new ResponseDataDto(certificates);
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
     }
   }
 
@@ -149,7 +182,7 @@ export class CertificatesService {
         await this.certificateReportRepository.save(certificateReport);
       return new ResponseDataDto(saved);
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
     }
   }
 
@@ -168,10 +201,12 @@ export class CertificatesService {
         throw new NotFoundException(`Certificate with ID: ${id}`);
       const reportedCertificates = await this.certificateReportRepository.find({
         where: { certificate_id: { id: certificate.id } },
+        relations: { certificate_id: true },
+        order: { created_at: 'desc' },
       });
       return new ResponseDataDto(reportedCertificates);
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
     }
   }
 
@@ -182,10 +217,11 @@ export class CertificatesService {
     try {
       const reportedCertificates = await this.certificateReportRepository.find({
         relations: { certificate_id: true, responsible: true },
+        order: { created_at: 'desc' },
       });
       return new ResponseDataDto(reportedCertificates);
     } catch (e) {
-      throw new BadRequestException(``);
+      throw e;
     }
   }
 
@@ -198,10 +234,11 @@ export class CertificatesService {
       if (!user) throw new NotFoundException(`User with ID: ${id}`);
       const reportedCertificates = await this.certificateReportRepository.find({
         where: { responsible: { id: user.id } },
+        order: { created_at: 'desc' },
       });
       return new ResponseDataDto(reportedCertificates);
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
     }
   }
 }

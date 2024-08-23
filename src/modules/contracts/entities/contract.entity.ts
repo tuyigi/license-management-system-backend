@@ -16,6 +16,9 @@ import { SystemTool } from '../../system-tools/entities/system-tool.entity';
 import { ContractStatusEnum } from '../../../common/enums/contract-status.enum';
 import { DepartmentEntity } from '../../departments/entities/department.entity';
 import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
+import { ContractSystemToolEntity } from './contract-system-tool.entity';
+import { ComponentEntity } from './component.entity';
+import { ContractReminderEntity } from './contract-reminder.entity';
 
 @Entity('contracts')
 export class Contract {
@@ -38,6 +41,8 @@ export class Contract {
   end_date: Date;
   @OneToMany(() => Payment, (p) => p.contract)
   payments: Payment[];
+  @OneToMany(() => ContractReminderEntity, (c) => c.contract)
+  reminders: ContractReminderEntity[];
   @Column({ type: 'text', nullable: true })
   description: string;
   @Column({ enum: ContractStatusEnum, default: ContractStatusEnum.VALID })
@@ -46,6 +51,10 @@ export class Contract {
   document_link: string;
   @Column({ default: 0 })
   number_system_users: number;
+  @OneToMany(() => ContractSystemToolEntity, (a) => a.contract)
+  tools: ContractSystemToolEntity[];
+  @OneToMany(() => ComponentEntity, (c) => c.contract)
+  components: ComponentEntity[];
   @CreateDateColumn()
   created_at: Date;
   @UpdateDateColumn()
@@ -58,4 +67,6 @@ export class Contract {
   department: DepartmentEntity;
   @Column({ enum: ApprovalStatusEnum, default: ApprovalStatusEnum.PENDING })
   approval_status: ApprovalStatusEnum;
+  @Column({ nullable: true })
+  approval_comment: string;
 }

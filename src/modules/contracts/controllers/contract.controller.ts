@@ -12,6 +12,10 @@ import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { ContractDto } from '../dtos/contract.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
+import { ComponentDto } from '../dtos/component.dto';
+import { ContractToolDto } from '../dtos/contract-tool.dto';
+import { ReminderDto } from '../dtos/reminder.dto';
+import { ApprovalDto } from '../enums/approval.dto';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('contract')
@@ -56,7 +60,6 @@ export class ContractController {
   //   return this.contractService.generateBatches(id);
   // }
 
-
   /*
   Update Approval Status
    */
@@ -64,7 +67,104 @@ export class ContractController {
   async updateApprovalStatus(
     @Param('id') id: number,
     @Param('status') status: ApprovalStatusEnum,
+    @Body() approvalDto: ApprovalDto,
   ): Promise<ResponseDataDto> {
-    return this.contractService.changeApprovalStatus(id, status);
+    return this.contractService.changeApprovalStatus(id, status, approvalDto);
+  }
+
+  /*
+  Add Contract Components
+   */
+  @Post(`component`)
+  async createComponent(
+    @Body() componentDto: ComponentDto,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.addComponent(componentDto);
+  }
+
+  /*
+  Get Contract Components
+   */
+  @Get(`component/:id`)
+  async getContractComponent(
+    @Param('id') id: number,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.getContractComponents(id);
+  }
+
+  /*
+  Get contract by department
+   */
+  @Get(`department/:id`)
+  async getContractDepartment(
+    @Param('id') id: number,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.getContractDepartment(id);
+  }
+
+  /*
+  add system tool to contract 
+ */
+  @Put(`addSystemTool/:contractId/:systemId`)
+  async addSystemToContract(
+    @Param('contractId') contractId: number,
+    @Param('systemId') systemId: number,
+    @Body() contractToolDto: ContractToolDto,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.addSystemTool(
+      contractId,
+      systemId,
+      contractToolDto,
+    );
+  }
+
+  /*
+  remove system tool on contract 
+  */
+  @Put(`removeSystemTool/:contractId/:systemId`)
+  async removeSystemOnContract(
+    @Param('contractId') contractId: number,
+    @Param('systemId') systemId: number,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.removeSystemTool(contractId, systemId);
+  }
+
+  /*
+  Get Contract system tool
+   */
+  @Get('systemTool/:contractId')
+  async getContractTools(
+    @Param('contractId') contractId: number,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.getContractSystemTool(contractId);
+  }
+
+  /*
+  Get contract details
+   */
+  @Get('/:id')
+  async getContractDetails(@Param('id') id: number): Promise<ResponseDataDto> {
+    return this.contractService.getContractDetails(id);
+  }
+
+  /*
+  Add reminder
+   */
+  @Put('reminder/:id')
+  async addReminder(
+    @Body() reminderDto: ReminderDto,
+    @Param('id') contractId: number,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.addReminder(reminderDto, contractId);
+  }
+
+  /*
+  Remove reminder
+   */
+  @Put('reminder/:id')
+  async removeReminder(
+    @Param('id') reminderId: number,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.removeReminder(reminderId);
   }
 }

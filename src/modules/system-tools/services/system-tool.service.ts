@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,12 +7,15 @@ import { SystemTool } from '../entities/system-tool.entity';
 import { Repository } from 'typeorm';
 import { SystemToolDto } from '../dtos/system-tool.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
+import { DepartmentEntity } from '../../departments/entities/department.entity';
 
 @Injectable()
 export class SystemToolService {
   constructor(
     @InjectRepository(SystemTool)
     private readonly systemToolRepository: Repository<SystemTool>,
+    @InjectRepository(DepartmentEntity)
+    private readonly departmentRepository: Repository<DepartmentEntity>,
   ) {}
 
   /*
@@ -21,11 +23,20 @@ export class SystemToolService {
    */
   async addSystemTool(systemToolDto: SystemToolDto): Promise<ResponseDataDto> {
     try {
+      const department: DepartmentEntity =
+        await this.departmentRepository.findOne({
+          where: { id: systemToolDto.department },
+        });
+      if (!department)
+        throw new NotFoundException(
+          `Department with ID: ${systemToolDto.department} not found`,
+        );
       const systemTool: SystemTool = new SystemTool();
       systemTool.system_tool_name = systemToolDto.name;
       systemTool.description = systemToolDto.description
         ? systemToolDto.description
         : '';
+      systemTool.department = department;
       const savedSystemTool = await this.systemToolRepository.save(systemTool);
       return new ResponseDataDto(
         savedSystemTool,
@@ -33,7 +44,7 @@ export class SystemToolService {
         `System tool saved successfully`,
       );
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
     }
   }
 
@@ -45,6 +56,14 @@ export class SystemToolService {
     systemToolDto: SystemToolDto,
   ): Promise<ResponseDataDto> {
     try {
+      const department: DepartmentEntity =
+        await this.departmentRepository.findOne({
+          where: { id: systemToolDto.department },
+        });
+      if (!department)
+        throw new NotFoundException(
+          `Department with ID: ${systemToolDto.department} not found`,
+        );
       const systemTool: SystemTool = await this.systemToolRepository.findOne({
         where: {
           id,
@@ -55,6 +74,7 @@ export class SystemToolService {
       console.log(systemToolDto.name);
       systemTool.system_tool_name = systemToolDto.name;
       systemTool.description = systemToolDto.description;
+      systemTool.department = department;
       await this.systemToolRepository.save(systemTool);
       return new ResponseDataDto(
         systemTool,
@@ -62,7 +82,7 @@ export class SystemToolService {
         `System tool updated successfully`,
       );
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
     }
   }
 
@@ -78,7 +98,18 @@ export class SystemToolService {
         `System tool fetched successfully`,
       );
     } catch (e) {
-      throw new BadRequestException(`${e.message}`);
+      throw e;
+    }
+  }
+
+  async getToolDepartment(departmentId: number): Promise<ResponseDataDto> {
+    try {
+      const systemTools: SystemTool[] = await this.systemToolRepository.find({
+        where: { department: { id: departmentId } },
+      });
+      return new ResponseDataDto(systemTools);
+    } catch (e) {
+      throw e;
     }
   }
 }

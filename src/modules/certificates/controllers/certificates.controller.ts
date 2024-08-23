@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { CertificatesService } from '../services/certificates.service';
 import { CertificateDto } from '../dtos/certificate.dto';
 import { CertificateReportDto } from '../dtos/certificate-report.dto';
+import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 
+@UseGuards(new JwtAuthGuard())
 @Controller('certificate')
 export class CertificatesController {
   constructor(private readonly certificateService: CertificatesService) {}

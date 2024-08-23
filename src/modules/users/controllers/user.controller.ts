@@ -1,11 +1,32 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { RegisterUserDto } from '../dtos/register-user.dto';
-
+import { sendEmailV2 } from '../../../common/utils/communication.utils';
+import { ChangePasswordDto } from '../dtos/change-password.dto';
+import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
+@UseGuards(new JwtAuthGuard())
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UsersService) {}
+
+  /*
+  Change Password
+   */
+  @Put('changePassword')
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<ResponseDataDto> {
+    return this.userService.changePassword(changePasswordDto);
+  }
+
+  /*
+  Send Email
+   */
+  @Post('send')
+  async sendEmail(): Promise<boolean> {
+    return sendEmailV2();
+  }
 
   /*
   Create new organization user

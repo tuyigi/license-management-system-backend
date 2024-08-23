@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Organization } from '../../organizations/entities/organization.entity';
 import { Repository } from 'typeorm';
@@ -7,6 +11,11 @@ import { LicenseRequest } from '../../license-requests/entities/license-request.
 import { User } from '../../users/entities/user.entity';
 import { OrganizationLicense } from '../../organizations/entities/organization_license.entity';
 import { ReportLicense } from '../../report-license/entities/report-license.entity';
+import { DepartmentEntity } from '../../departments/entities/department.entity';
+import { Contract } from '../../contracts/entities/contract.entity';
+import { Payment } from '../../payments/entities/payment.entity';
+import { CertificateEntity } from '../../certificates/entities/certificate.entity';
+import { Vendor } from '../../vendors/entities/vendor.entity';
 
 @Injectable()
 export class ReportService {
@@ -21,6 +30,12 @@ export class ReportService {
     private readonly organizationLicenseRepository: Repository<OrganizationLicense>,
     @InjectRepository(ReportLicense)
     private readonly reportLicenseRepository: Repository<ReportLicense>,
+    @InjectRepository(DepartmentEntity)
+    private readonly departmentRepository: Repository<DepartmentEntity>,
+    @InjectRepository(Contract)
+    private readonly contractRepository: Repository<Contract>,
+    @InjectRepository(CertificateEntity)
+    private readonly certificateRepository: Repository<CertificateEntity>,
   ) {}
 
   /*
@@ -207,6 +222,94 @@ Get approved license type stats
         200,
         `License summary fetched successfully`,
       );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+  Check Department
+   */
+  async checkDepartment(id: number): Promise<DepartmentEntity> {
+    try {
+      const department: DepartmentEntity =
+        await this.departmentRepository.findOne({ where: { id } });
+      if (!department)
+        throw new NotFoundException(`Department with ID: ${id} not found`);
+      return department;
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+  Get total contract per department
+   */
+  async getTotalDepartment(id: number): Promise<ResponseDataDto> {
+    try {
+      const department: DepartmentEntity = await this.checkDepartment(id);
+      const total_contracts: number = await this.contractRepository.countBy({
+        department: { id },
+      });
+      const responseData = { department, total_contracts };
+      return new ResponseDataDto(responseData);
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+  Get contract period payments summary of specific department
+   */
+  async getContractPeriodPayments(id: number): Promise<ResponseDataDto> {
+    try {
+      const department: DepartmentEntity = await this.checkDepartment(id);
+      const summary = await this.contractRepository
+        .createQueryBuilder('c')
+        .select('COUNT(*)', 'count')
+        .addSelect('p.payment_status', 'payment_status')
+        .innerJoin(Payment, 'p', 'c.id = p.contract')
+        .where('c.department = :department', { department: department.id })
+        .groupBy('p.payment_status')
+        .getRawMany();
+      return new ResponseDataDto(summary);
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+  Get numbers of certificates in specific department
+   */
+  async getCertificateNumbers(id: number): Promise<ResponseDataDto> {
+    try {
+      const department = await this.checkDepartment(id);
+      const total_certificates = await this.certificateRepository.countBy({
+        department_id: { id: department.id },
+      });
+      const responseData = { department, total_certificates };
+      return new ResponseDataDto(responseData);
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+  Get vendors payment numbers summary per specific department
+   */
+  async getVendorPayments(id: number): Promise<ResponseDataDto> {
+    try {
+      const department = await this.checkDepartment(id);
+      const report = await this.contractRepository
+        .createQueryBuilder('c')
+        .select('COUNT(*)', 'count')
+        .addSelect('v.vendor_name', 'vendor_name')
+        .innerJoin(Vendor, 'v', 'v.id = c.vendor')
+        .innerJoin(Payment, 'p', 'c.id = p.contract')
+        .where('c.department = :department', { department: department.id })
+        .groupBy('v.vendor_name')
+        .getRawMany();
+      return new ResponseDataDto(report);
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
     }

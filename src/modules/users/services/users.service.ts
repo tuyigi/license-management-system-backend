@@ -8,10 +8,12 @@ import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
 import { RegisterUserDto } from '../dtos/register-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Organization } from '../../organizations/entities/organization.entity';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { Role } from '../entities/role.entity';
+import { DepartmentEntity } from '../../departments/entities/department.entity';
+import { ChangePasswordDto } from '../dtos/change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +24,8 @@ export class UsersService {
     private readonly organizationRepository: Repository<Organization>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(DepartmentEntity)
+    private readonly departmentRepository: Repository<DepartmentEntity>,
   ) {}
 
   async create(registerUserDto: RegisterUserDto): Promise<ResponseDataDto> {
@@ -36,6 +40,7 @@ export class UsersService {
         role_id,
         organization_id,
         user_type,
+        department_id,
       } = registerUserDto;
 
       /*
@@ -56,6 +61,16 @@ export class UsersService {
       const role = await this.roleRepository.findOne({
         where: { id: role_id },
       });
+      /*
+      Check department 
+       */
+      let department = null;
+      if (department_id) {
+        department = await this.departmentRepository.findOne({
+          where: { id: department_id },
+        });
+      }
+
       /*
       validate username
        */
@@ -78,11 +93,48 @@ export class UsersService {
       user.phone_number = phone_number;
       user.password = hashedPassword;
       user.email = email;
+      user.department = department;
       user.user_type = user_type;
       user.role_id = role;
       user.organization_id = organization;
       const saveUser = await this.userRepository.save(user);
       return new ResponseDataDto(saveUser, 201, 'User saved successfully');
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+  Change password
+   */
+  async changePassword(
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<ResponseDataDto> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username: changePasswordDto.username },
+      });
+      if (!user)
+        throw new NotFoundException(
+          `User with username:${changePasswordDto.username} not found`,
+        );
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(
+        changePasswordDto.new_password,
+        salt,
+      );
+      // check if old password is correct
+      if (await user.validatePassword(changePasswordDto.old_password)) {
+        // encrpty and change password
+        user.password = hashedPassword;
+        await this.userRepository.save(user);
+        return new ResponseDataDto(
+          null,
+          200,
+          `Password has been changed successfully`,
+        );
+      }
+      throw new BadRequestException(`Incorrect password provided`);
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
     }

@@ -12,6 +12,7 @@ import { RoleController } from './controllers/role.controller';
 import { UserController } from './controllers/user.controller';
 import { PrivilegeService } from './services/privilege.service';
 import { PrivilegeController } from './controllers/privilege.controller';
+import { DepartmentEntity } from '../departments/entities/department.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PrivilegeController } from './controllers/privilege.controller';
       RolePrivilege,
       Organization,
       OrganizationLicense,
+      DepartmentEntity,
     ]),
   ],
   providers: [UsersService, RoleService, PrivilegeService],

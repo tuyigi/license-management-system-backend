@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { SystemFunctionsService } from '../services/system-functions.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { SystemFunctionsDto } from '../dtos/system-functions.dto';
+import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 
+@UseGuards(new JwtAuthGuard())
 @Controller('systemFunction')
 export class SystemFunctionsController {
   constructor(private readonly systemFunctionService: SystemFunctionsService) {}

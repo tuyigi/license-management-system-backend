@@ -34,9 +34,9 @@ export class LdapAuthenticationService {
       console.log('done binding...');
       console.log(client.data);
       const opts: ldap.SearchOptions = {
-        filter: `(&(sAMAccountName=gtuyishime))`,
+        // filter: `(&(sAMAccountName=gtuyishime))`,
         scope: 'sub',
-        attributes: ['dn', 'sn', 'cn', 'sAMAccountName', 'displayName'],
+        // attributes: ['dn', 'sn', 'cn', 'sAMAccountName', 'displayName'],
       };
       const results = await client.searchReturnAll(
         'dc=bnr,dc=uat',

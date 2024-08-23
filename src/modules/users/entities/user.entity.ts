@@ -12,7 +12,7 @@ import { Role } from './role.entity';
 import { UserType } from '../../../common/enums/user_type.enum';
 import { GeneralStatus } from '../../../common/enums/general.enum';
 import { Organization } from '../../organizations/entities/organization.entity';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Exclude } from '@nestjs/class-transformer';
 import { DepartmentEntity } from '../../departments/entities/department.entity';
 

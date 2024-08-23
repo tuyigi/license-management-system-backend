@@ -48,3 +48,27 @@ export async function sendEmail(email: string, content: string) {
       console.log(error);
     });
 }
+
+export async function sendEmailV2(): Promise<boolean> {
+  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = String(0);
+  const nodemailer = require('nodemailer');
+  // create transporter object with smtp server details
+  const transporter = nodemailer.createTransport({
+    host: '172.16.1.120',
+    port: 25,
+    secure: false,
+    auth: {
+      user: 'bnrw\\ecor-uat',
+      pass: '3c0R#U@7_2021#',
+    },
+  });
+
+  // send email
+  await transporter.sendMail({
+    from: 'ecor-uat@bnr.rw',
+    to: 'tuyigilbert97@gamil.com',
+    subject: 'Test Email Subject',
+    text: 'Example Plain Text Message Body',
+  });
+  return true;
+}

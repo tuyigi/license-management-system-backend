@@ -1,11 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Res, UseGuards } from '@nestjs/common';
 import { LicenseRequestService } from '../services/license-request.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { RequestLicenseDto } from '../dtos/request-license.dto';
 import { ReportViewLicenseDto } from '../../../common/dtos/report-view-license.dto';
 import { DecisionLicenseRequestDto } from '../dtos/decision-license-request.dto';
 import { Response } from 'express';
+import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 
+@UseGuards(new JwtAuthGuard())
 @Controller('licenseRequest')
 export class LicenseRequestController {
   constructor(private readonly licenseRequestService: LicenseRequestService) {}

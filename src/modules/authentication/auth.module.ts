@@ -15,6 +15,7 @@ import { Role } from '../users/entities/role.entity';
 import { RolePrivilege } from '../users/entities/role_privilege.entity';
 import { Organization } from '../organizations/entities/organization.entity';
 import { OrganizationLicense } from '../organizations/entities/organization_license.entity';
+import { DepartmentEntity } from '../departments/entities/department.entity';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { OrganizationLicense } from '../organizations/entities/organization_lice
       RolePrivilege,
       Organization,
       OrganizationLicense,
+      DepartmentEntity,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({

@@ -94,7 +94,7 @@ export class PrivilegeService {
   }
 
   /*
-  Get Privilegs
+  Get Privileges
    */
   async getPrivileges(): Promise<ResponseDataDto> {
     const privileges: Privilege[] = await this.privilegeRepository.find();

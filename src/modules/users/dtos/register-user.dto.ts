@@ -1,5 +1,5 @@
 import { UserType } from '../../../common/enums/user_type.enum';
-import { IsEmail, IsEnum, IsNumber, IsString, Length } from 'class-validator';
+import { IsEmail, IsEnum, IsNumber, IsOptional, IsString, Length } from 'class-validator';
 
 export class RegisterUserDto {
   @IsString()
@@ -21,4 +21,6 @@ export class RegisterUserDto {
   organization_id: number;
   @IsEnum(UserType)
   user_type: UserType;
+  @IsOptional()
+  department_id: number;
 }
