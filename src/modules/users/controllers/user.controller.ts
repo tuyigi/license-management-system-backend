@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { RegisterUserDto } from '../dtos/register-user.dto';
@@ -13,12 +13,12 @@ export class UserController {
   /*
   Change Password
    */
-  @Put('changePassword')
-  async changePassword(
-    @Body() changePasswordDto: ChangePasswordDto,
-  ): Promise<ResponseDataDto> {
-    return this.userService.changePassword(changePasswordDto);
-  }
+  // @Put('changePassword')
+  // async changePassword(
+  //   @Body() changePasswordDto: ChangePasswordDto,
+  // ): Promise<ResponseDataDto> {
+  //   return this.userService.changePassword(changePasswordDto);
+  // }
 
   /*
   Send Email
@@ -31,11 +31,11 @@ export class UserController {
   /*
   Create new organization user
    */
-  @Post()
+  @Get()
   async createUser(
-    @Body() registerDto: RegisterUserDto,
+    @Query('sAMAccountName') email: string,
   ): Promise<ResponseDataDto> {
-    return this.userService.create(registerDto);
+    return this.userService.create(email);
   }
 
   /*
@@ -60,12 +60,12 @@ export class UserController {
   /*
   Get Organization users by organization ID
    */
-  @Get('/organization/:id')
-  async getOrganizationUsers(
-    @Param('id') id: number,
-  ): Promise<ResponseDataDto> {
-    return this.userService.getOrganizationUsers(id);
-  }
+  // @Get('/organization/:id')
+  // async getOrganizationUsers(
+  //   @Param('id') id: number,
+  // ): Promise<ResponseDataDto> {
+  //   return this.userService.getOrganizationUsers(id);
+  // }
 
   /*
   Get All Users
