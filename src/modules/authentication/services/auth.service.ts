@@ -20,13 +20,10 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
   ) {}
-  async signIn(signInDto: SigninDto): Promise<ResponseDataDto> {
-    const user = await this.validateUser(
-      signInDto.username,
-      signInDto.password,
-    );
+  async signIn(username: string): Promise<ResponseDataDto> {
+    const user = await this.validateUser(username);
     if (!user) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new UnauthorizedException('Invalid username');
     }
 
     const payload = { sub: user.id, username: user.username };
@@ -46,10 +43,10 @@ export class AuthService {
     );
   }
 
-  async validateUser(username: string, password: string): Promise<any> {
+  async validateUser(username: string): Promise<any> {
     const user = await this.usersService.findByUsername(username);
-    if (user && (await user.validatePassword(password))) {
-      const { password, ...result } = user;
+    if (user) {
+      const { ...result } = user;
       return result;
     }
     return null;

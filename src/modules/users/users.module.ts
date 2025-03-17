@@ -13,6 +13,7 @@ import { UserController } from './controllers/user.controller';
 import { PrivilegeService } from './services/privilege.service';
 import { PrivilegeController } from './controllers/privilege.controller';
 import { DepartmentEntity } from '../departments/entities/department.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { DepartmentEntity } from '../departments/entities/department.entity';
       DepartmentEntity,
     ]),
   ],
-  providers: [UsersService, RoleService, PrivilegeService],
+  providers: [UsersService, RoleService, PrivilegeService, ConfigService],
   controllers: [RoleController, UserController, PrivilegeController],
 })
 export class UsersModule {}

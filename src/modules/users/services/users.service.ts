@@ -14,6 +14,9 @@ import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { Role } from '../entities/role.entity';
 import { DepartmentEntity } from '../../departments/entities/department.entity';
 import { ChangePasswordDto } from '../dtos/change-password.dto';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
+import { UserType } from '../../../common/enums/user_type.enum';
 
 @Injectable()
 export class UsersService {
@@ -26,80 +29,99 @@ export class UsersService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(DepartmentEntity)
     private readonly departmentRepository: Repository<DepartmentEntity>,
+    private configService: ConfigService,
   ) {}
 
+  /*
+
+  Validate User with LDAP
+  *
+  * 
+  * */
+
   async create(registerUserDto: RegisterUserDto): Promise<ResponseDataDto> {
+    console.info('User Registration Data:', registerUserDto);
+    const baseUrl = this.configService.get<string>(
+      'LDAP_VALIDATE_ACCOUNT_URL_TEST',
+    );
+    const validateAccountUrl = `${baseUrl}?sAMAccountName=${encodeURIComponent(registerUserDto.email)}`;
+
+    console.log('Final URL:', validateAccountUrl);
     try {
-      const {
-        username,
-        password,
-        last_name,
-        first_name,
-        phone_number,
-        email,
-        role_id,
-        organization_id,
-        user_type,
-        department_id,
-      } = registerUserDto;
-
-      /*
-      Check organization exists
-       */
-      const organization = await this.organizationRepository.findOne({
-        where: {
-          id: organization_id,
-        },
-      });
-      if (!organization)
-        throw new NotFoundException(
-          `Organization with ${organization_id} not found`,
-        );
-      /*
-      Check role if exists
-       */
-      const role = await this.roleRepository.findOne({
-        where: { id: role_id },
-      });
-      /*
-      Check department 
-       */
-      let department = null;
-      if (department_id) {
-        department = await this.departmentRepository.findOne({
-          where: { id: department_id },
-        });
+      const response = await axios.get(validateAccountUrl);
+      const { statusCode, message, data } = response.data;
+      const { objectName, name, sAMAccountName } = data;
+      console.log('Response:', { statusCode, message, data });
+      const username = sAMAccountName;
+      const email = registerUserDto.email;
+      const parts = objectName.split(',');
+      let ou: any;
+      for (const part of parts) {
+        if (part.startsWith('OU=')) {
+          ou = part.substring(3);
+          break;
+        }
       }
-
-      /*
-      validate username
-       */
-      let user: User = await this.userRepository.findOne({
-        where: [{ username }, { email }, { phone_number }],
-      });
-      if (user)
-        throw new ConflictException(
-          `User with either ${username}, ${email}, ${phone_number} already exists`,
+      if (statusCode === 200) {
+        let user: User = await this.userRepository.findOne({
+          where: [{ username }, { email }],
+        });
+        /*
+     Check organization exists
+      */
+        const organization = await this.organizationRepository.findOne({
+          where: {
+            id: registerUserDto.organization_id,
+          },
+        });
+        if (!organization)
+          throw new NotFoundException(
+            `Organization with ${registerUserDto.organization_id} not found`,
+          );
+        /*
+        Check role if exists
+         */
+        const role = await this.roleRepository.findOne({
+          where: { id: registerUserDto.role_id },
+        });
+        /*
+        Check department
+         */
+        let department = null;
+        if (registerUserDto.department_id) {
+          department = await this.departmentRepository.findOne({
+            where: { id: registerUserDto.department_id },
+          });
+        }
+        if (user)
+          throw new ConflictException(
+            `User with either ${username}, ${email},already exists`,
+          );
+        const [first_name, last_name] = name.split(' ');
+        user = new User();
+        user.username = username;
+        user.first_name = first_name;
+        user.last_name = last_name;
+        user.email = registerUserDto.email;
+        user.department = department;
+        user.user_type = registerUserDto.user_type;
+        user.role_id = role;
+        user.organization_id = organization;
+        const saveUser = await this.userRepository.save(user);
+        return new ResponseDataDto(saveUser, 201, 'User saved successfully');
+      } else if (statusCode === 401) {
+        console.error('failed 401');
+        return new ResponseDataDto(response.data, 401, 'Invalid Credentials');
+      } else if (statusCode === 400) {
+        console.error('failed 404');
+        return new ResponseDataDto(
+          response.data,
+          404,
+          'Request Failed please contact system administrator',
         );
-      if (!role)
-        throw new NotFoundException(`Role with id ${role_id} not found`);
-      const salt = await bcrypt.genSalt();
-      const hashedPassword = await bcrypt.hash(password, salt);
-      user = new User();
-      user.username = username;
-      user.password = hashedPassword;
-      user.first_name = first_name;
-      user.last_name = last_name;
-      user.phone_number = phone_number;
-      user.password = hashedPassword;
-      user.email = email;
-      user.department = department;
-      user.user_type = user_type;
-      user.role_id = role;
-      user.organization_id = organization;
-      const saveUser = await this.userRepository.save(user);
-      return new ResponseDataDto(saveUser, 201, 'User saved successfully');
+      }
     } catch (e) {
+      console.error(e.message);
       throw new BadRequestException(`${e.message}`);
     }
   }
@@ -107,7 +129,7 @@ export class UsersService {
   /*
   Change password
    */
-  async changePassword(
+  /*  async changePassword(
     changePasswordDto: ChangePasswordDto,
   ): Promise<ResponseDataDto> {
     try {
@@ -138,7 +160,7 @@ export class UsersService {
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
     }
-  }
+  }*/
 
   async findOne(id: number): Promise<User> {
     return this.userRepository.findOne({ where: { id } });
@@ -175,8 +197,8 @@ export class UsersService {
       where: { username },
       relations: {
         role_id: { privileges: { privilege_id: true } },
-        organization_id: true,
         department: true,
+        organization_id: true,
       },
     });
   }

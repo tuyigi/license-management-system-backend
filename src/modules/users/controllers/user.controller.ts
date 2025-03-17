@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { RegisterUserDto } from '../dtos/register-user.dto';
@@ -13,12 +13,12 @@ export class UserController {
   /*
   Change Password
    */
-  @Put('changePassword')
-  async changePassword(
-    @Body() changePasswordDto: ChangePasswordDto,
-  ): Promise<ResponseDataDto> {
-    return this.userService.changePassword(changePasswordDto);
-  }
+  // @Put('changePassword')
+  // async changePassword(
+  //   @Body() changePasswordDto: ChangePasswordDto,
+  // ): Promise<ResponseDataDto> {
+  //   return this.userService.changePassword(changePasswordDto);
+  // }
 
   /*
   Send Email
@@ -33,9 +33,9 @@ export class UserController {
    */
   @Post()
   async createUser(
-    @Body() registerDto: RegisterUserDto,
+    @Body() registerUserDto: RegisterUserDto,
   ): Promise<ResponseDataDto> {
-    return this.userService.create(registerDto);
+    return this.userService.create(registerUserDto);
   }
 
   /*

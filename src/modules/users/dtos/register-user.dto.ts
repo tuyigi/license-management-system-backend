@@ -1,19 +1,26 @@
 import { UserType } from '../../../common/enums/user_type.enum';
-import { IsEmail, IsEnum, IsNumber, IsOptional, IsString, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
+import { Optional } from '@nestjs/common';
 
 export class RegisterUserDto {
-  @IsString()
+  @Optional()
   first_name: string;
-  @IsString()
+  @Optional()
   last_name: string;
-  @IsString()
+  @Optional()
   username: string;
-  @IsString()
+  @Optional()
   password: string;
   @IsEmail()
   email: string;
-  @IsString()
-  @Length(10, 10)
+  @Optional()
   phone_number: string;
   @IsNumber()
   role_id: number;

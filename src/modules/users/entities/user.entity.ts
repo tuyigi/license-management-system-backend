@@ -20,19 +20,23 @@ import { DepartmentEntity } from '../../departments/entities/department.entity';
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
-  @Column()
+  @Column({
+    nullable: true,
+  })
   first_name: string;
-  @Column()
+  @Column({
+    nullable: true,
+  })
   last_name: string;
-  @Column({ unique: true })
+  @Column({ nullable: true })
   username: string;
   @Column({ unique: true })
   email: string;
-  @Column({ length: 10, unique: true })
-  phone_number: string;
-  @Column()
-  @Exclude()
-  password: string;
+  // @Column({ length: 10, unique: true })
+  // phone_number: string;
+  // @Column()
+  // @Exclude()
+  // password: string;
   @Column({ enum: GeneralStatus, default: GeneralStatus.ENABLED })
   status: GeneralStatus;
   @ManyToOne(() => Role, (role) => role.users)
@@ -51,7 +55,7 @@ export class User extends BaseEntity {
   @JoinColumn({ name: 'department' })
   department: DepartmentEntity;
 
-  async validatePassword(password: string): Promise<boolean> {
-    return bcrypt.compare(password, this.password);
-  }
+  // async validatePassword(password: string): Promise<boolean> {
+  //   return bcrypt.compare(password, this.password);
+  // }
 }
