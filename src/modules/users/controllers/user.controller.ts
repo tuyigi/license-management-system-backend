@@ -31,11 +31,11 @@ export class UserController {
   /*
   Create new organization user
    */
-  @Get()
+  @Post()
   async createUser(
-    @Query('sAMAccountName') email: string,
+    @Body() registerUserDto: RegisterUserDto,
   ): Promise<ResponseDataDto> {
-    return this.userService.create(email);
+    return this.userService.create(registerUserDto);
   }
 
   /*
@@ -60,12 +60,12 @@ export class UserController {
   /*
   Get Organization users by organization ID
    */
-  // @Get('/organization/:id')
-  // async getOrganizationUsers(
-  //   @Param('id') id: number,
-  // ): Promise<ResponseDataDto> {
-  //   return this.userService.getOrganizationUsers(id);
-  // }
+  @Get('/organization/:id')
+  async getOrganizationUsers(
+    @Param('id') id: number,
+  ): Promise<ResponseDataDto> {
+    return this.userService.getOrganizationUsers(id);
+  }
 
   /*
   Get All Users

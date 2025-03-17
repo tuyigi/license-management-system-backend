@@ -20,11 +20,15 @@ import { DepartmentEntity } from '../../departments/entities/department.entity';
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
-  @Column()
+  @Column({
+    nullable: true,
+  })
   first_name: string;
-  @Column()
+  @Column({
+    nullable: true,
+  })
   last_name: string;
-  @Column({ unique: true })
+  @Column({ nullable: true })
   username: string;
   @Column({ unique: true })
   email: string;

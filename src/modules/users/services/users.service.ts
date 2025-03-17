@@ -39,11 +39,12 @@ export class UsersService {
   * 
   * */
 
-  async create(email: string): Promise<ResponseDataDto> {
+  async create(registerUserDto: RegisterUserDto): Promise<ResponseDataDto> {
+    console.info('User Registration Data:', registerUserDto);
     const baseUrl = this.configService.get<string>(
       'LDAP_VALIDATE_ACCOUNT_URL_TEST',
     );
-    const validateAccountUrl = `${baseUrl}?sAMAccountName=${encodeURIComponent(email)}`;
+    const validateAccountUrl = `${baseUrl}?sAMAccountName=${encodeURIComponent(registerUserDto.email)}`;
 
     console.log('Final URL:', validateAccountUrl);
     try {
@@ -52,6 +53,7 @@ export class UsersService {
       const { objectName, name, sAMAccountName } = data;
       console.log('Response:', { statusCode, message, data });
       const username = sAMAccountName;
+      const email = registerUserDto.email;
       const parts = objectName.split(',');
       let ou: any;
       for (const part of parts) {
@@ -64,6 +66,33 @@ export class UsersService {
         let user: User = await this.userRepository.findOne({
           where: [{ username }, { email }],
         });
+        /*
+     Check organization exists
+      */
+        const organization = await this.organizationRepository.findOne({
+          where: {
+            id: registerUserDto.organization_id,
+          },
+        });
+        if (!organization)
+          throw new NotFoundException(
+            `Organization with ${registerUserDto.organization_id} not found`,
+          );
+        /*
+        Check role if exists
+         */
+        const role = await this.roleRepository.findOne({
+          where: { id: registerUserDto.role_id },
+        });
+        /*
+        Check department
+         */
+        let department = null;
+        if (registerUserDto.department_id) {
+          department = await this.departmentRepository.findOne({
+            where: { id: registerUserDto.department_id },
+          });
+        }
         if (user)
           throw new ConflictException(
             `User with either ${username}, ${email},already exists`,
@@ -73,34 +102,26 @@ export class UsersService {
         user.username = username;
         user.first_name = first_name;
         user.last_name = last_name;
-        user.email = email;
-        // user.department = ou;
-        user.user_type = UserType.SUPER_ADMIN;
-        // user.role_id = 'role';
-        // user.organization_id = 1;
+        user.email = registerUserDto.email;
+        user.department = department;
+        user.user_type = registerUserDto.user_type;
+        user.role_id = role;
+        user.organization_id = organization;
         const saveUser = await this.userRepository.save(user);
         return new ResponseDataDto(saveUser, 201, 'User saved successfully');
-
-        /*
-        Check role if exists
-         */
-        /*   const role = await this.roleRepository.findOne({
-             where: { id: role_id },
-           });*/
-        /*
-        Check department
-         */
-        /*      let department = null;
-              if (department_id) {
-                department = await this.departmentRepository.findOne({
-                  where: { id: department_id },
-                });
-              }*/
       } else if (statusCode === 401) {
         console.error('failed 401');
-        return new ResponseDataDto(response.data, 401, message);
+        return new ResponseDataDto(response.data, 401, 'Invalid Credentials');
+      } else if (statusCode === 400) {
+        console.error('failed 404');
+        return new ResponseDataDto(
+          response.data,
+          404,
+          'Request Failed please contact system administrator',
+        );
       }
     } catch (e) {
+      console.error(e.message);
       throw new BadRequestException(`${e.message}`);
     }
   }
@@ -152,7 +173,7 @@ export class UsersService {
   async getOneUser(id: number): Promise<ResponseDataDto> {
     const user: User = await this.userRepository.findOne({
       where: { id },
-      relations: { role_id: true },
+      relations: { role_id: true, organization_id: true },
     });
     if (!user) throw new NotFoundException(`User with id : ${id} not found`);
     return new ResponseDataDto(user, 200, 'User fetched successfully');
@@ -164,7 +185,7 @@ export class UsersService {
   async getUserByUsername(username: string): Promise<ResponseDataDto> {
     const user: User = await this.userRepository.findOne({
       where: { username },
-      relations: { role_id: true },
+      relations: { role_id: true, organization_id: true },
     });
     if (!user)
       throw new NotFoundException(`User with username: ${username} not found`);
@@ -177,6 +198,7 @@ export class UsersService {
       relations: {
         role_id: { privileges: { privilege_id: true } },
         department: true,
+        organization_id: true,
       },
     });
   }
@@ -184,28 +206,28 @@ export class UsersService {
   /*
   Get users in a specific organization
    */
-  // async getOrganizationUsers(id: number): Promise<ResponseDataDto> {
-  //   // check organization
-  //   const organization: Organization =
-  //     await this.organizationRepository.findOne({ where: { id } });
-  //   if (!organization)
-  //     throw new NotFoundException(`Organization with ID: ${id} not found`);
-  //   const users: User[] = await this.userRepository.find({
-  //     where: { organization_id: { id } },
-  //   });
-  //   return new ResponseDataDto(
-  //     users,
-  //     200,
-  //     'Organization users fetched successfully',
-  //   );
-  // }
+  async getOrganizationUsers(id: number): Promise<ResponseDataDto> {
+    // check organization
+    const organization: Organization =
+      await this.organizationRepository.findOne({ where: { id } });
+    if (!organization)
+      throw new NotFoundException(`Organization with ID: ${id} not found`);
+    const users: User[] = await this.userRepository.find({
+      where: { organization_id: { id } },
+    });
+    return new ResponseDataDto(
+      users,
+      200,
+      'Organization users fetched successfully',
+    );
+  }
 
   /*
   Get All Users
    */
   async getUsers(): Promise<ResponseDataDto> {
     const data = await this.userRepository.find({
-      relations: { role_id: true },
+      relations: { role_id: true, organization_id: true },
     });
     return new ResponseDataDto(data, 200, 'Users fetched successfully');
   }

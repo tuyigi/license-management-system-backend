@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { UsersService } from '../../users/services/users.service';
 import { RegisterUserDto } from '../../users/dtos/register-user.dto';
@@ -17,9 +17,9 @@ export class AuthController {
   /*
   Public Sign Up
    */
-  @Get('sign-up')
-  async signUp(@Query('sAMAccountName') email: string) {
-    return this.usersService.create(email);
+  @Post('sign-up')
+  async signUp(@Body() registerUserDto: RegisterUserDto) {
+    return this.usersService.create(registerUserDto);
   }
 
   /*
