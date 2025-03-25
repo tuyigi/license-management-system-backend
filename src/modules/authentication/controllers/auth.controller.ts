@@ -26,7 +26,7 @@ export class AuthController {
   Sign In
    */
   @Public()
-  @UseGuards(LocalAuthGuard)
+  // @UseGuards(LocalAuthGuard)
   @HttpCode(200)
   @Post('sign-in')
   async signIn(@Body() signInDto: SigninDto) {

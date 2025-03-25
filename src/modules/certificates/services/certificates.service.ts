@@ -31,6 +31,7 @@ export class CertificatesService {
    */
   async addCertificate(
     certificateDto: CertificateDto,
+    user: any,
   ): Promise<ResponseDataDto> {
     try {
       const department: DepartmentEntity =
@@ -48,6 +49,15 @@ export class CertificatesService {
         throw new BadRequestException(
           `Expiration date should be greater than issue date`,
         );
+
+      // const responsible: User = await this.userRepository.findOne({
+      //   where: { id: certificateDto.user_organization },
+      // });
+      // if (!responsible)
+      //   throw new NotFoundException(
+      //     `User Responsible with ID: ${certificateDto.user_organization} not found`,
+      //   );
+
       const certificate: CertificateEntity = new CertificateEntity();
       certificate.certificate = certificateDto.certificate_name;
       certificate.issue_date = new Date(
@@ -61,6 +71,21 @@ export class CertificatesService {
       certificate.user_organization = certificateDto.user_organization;
       certificate.description = certificateDto.description;
       const saved = await this.certificateRepository.save(certificate);
+
+      // start save report
+      const certificateReport: CertificateReportEntity =
+        new CertificateReportEntity();
+      certificateReport.certificate_id = certificate;
+      certificateReport.responsible = user['id'];
+      certificateReport.expiry_date = new Date(
+        Date.parse(`${certificateDto.expiration_date}`),
+      );
+      certificateReport.issue_date = new Date(
+        Date.parse(`${certificateDto.issue_date}`),
+      );
+      await this.certificateReportRepository.save(certificateReport);
+      // end save report
+
       return new ResponseDataDto(saved, 201, 'Certificate added successfully');
     } catch (e) {
       throw e;

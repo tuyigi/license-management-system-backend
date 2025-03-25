@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -16,13 +17,17 @@ export class ContractSystemToolEntity extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
   @ManyToOne(() => SystemTool)
+  @JoinColumn({ name: 'system_tool' })
   system_tool: SystemTool;
   @ManyToOne(() => Contract)
+  @JoinColumn({ name: 'contract' })
   contract: Contract;
   @Column({ default: 0.0 })
   price: number;
   @Column({ enum: CurrencyEnum, nullable: true })
   currency: CurrencyEnum;
+  @Column({ nullable: true })
+  host_server: string;
   @Column({ nullable: true })
   issue_date: Date;
   @Column({ nullable: true })

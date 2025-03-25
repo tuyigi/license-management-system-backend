@@ -6,7 +6,7 @@ import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { RequestUpdateStatus } from '../../../common/dtos/request_update_status.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 
-@UseGuards(new JwtAuthGuard())
+// @UseGuards(new JwtAuthGuard())
 @Controller('organization')
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) {}

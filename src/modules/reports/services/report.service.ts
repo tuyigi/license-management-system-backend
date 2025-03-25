@@ -16,6 +16,13 @@ import { Contract } from '../../contracts/entities/contract.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import { CertificateEntity } from '../../certificates/entities/certificate.entity';
 import { Vendor } from '../../vendors/entities/vendor.entity';
+import { CertificateReportEntity } from '../../certificates/entities/certificate-report.entity';
+import { CertificateFilterDto } from '../dtos/certificate-filters.dto';
+import { ComponentFilters } from '../dtos/component-filters.dto';
+import { ComponentEntity } from '../../contracts/entities/component.entity';
+import { SystemToolFilters } from '../dtos/SystemTool-filters';
+import { ContractSystemToolEntity } from '../../contracts/entities/contract-system-tool.entity';
+import { MetricFiltersDto } from '../dtos/metric-filters.dto';
 
 @Injectable()
 export class ReportService {
@@ -36,6 +43,12 @@ export class ReportService {
     private readonly contractRepository: Repository<Contract>,
     @InjectRepository(CertificateEntity)
     private readonly certificateRepository: Repository<CertificateEntity>,
+    @InjectRepository(CertificateReportEntity)
+    private readonly certificateReportRepository: Repository<CertificateReportEntity>,
+    @InjectRepository(ComponentEntity)
+    private readonly componentReportRepository: Repository<ComponentEntity>,
+    @InjectRepository(ContractSystemToolEntity)
+    private readonly systemToolReportRepository: Repository<ContractSystemToolEntity>,
   ) {}
 
   /*
@@ -312,6 +325,286 @@ Get approved license type stats
       return new ResponseDataDto(report);
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+  Get Certificate reports by year
+   */
+  async getCertificateReport(
+    certificateFilterDto: CertificateFilterDto,
+  ): Promise<ResponseDataDto> {
+    try {
+      const queryBuilder = this.certificateReportRepository
+        .createQueryBuilder('certificate_reports')
+        .innerJoin(
+          'certificate_reports.certificate_id',
+          'certificates',
+          'certificate_reports.certificate = certificates.id',
+        )
+        .innerJoin('certificate_reports.responsible', 'user')
+        .select([
+          `extract(day from (certificate_reports.expiry_date::timestamp - now()::date::timestamp)) as day_left`,
+          `TO_CHAR(certificate_reports.expiry_date, 'dd/mm/yyyy') as expiry_date`,
+          `TO_CHAR(certificate_reports.issue_date, 'dd/mm/yyyy') as issue_date`,
+          'certificate_reports.certificate',
+          'certificate_reports.responsible',
+          'certificates.certificate as name',
+          'certificates.description',
+          'certificates.user_organization',
+          'certificates.certificate_type',
+        ])
+        .where(
+          `extract(day from (certificate_reports.expiry_date::timestamp - now()::date::timestamp)) >= 0`,
+        );
+      if (certificateFilterDto?.year) {
+        queryBuilder.andWhere(
+          `EXTRACT(YEAR FROM certificate_reports.expiry_date) = :year`,
+          {
+            year: certificateFilterDto.year,
+          },
+        );
+      }
+      if (certificateFilterDto?.user_id) {
+        queryBuilder.andWhere(`certificate_reports.responsible = :user_id`, {
+          user_id: certificateFilterDto.user_id,
+        });
+      }
+      queryBuilder.orderBy('day_left', 'ASC');
+      const result = await queryBuilder.getRawMany();
+      return new ResponseDataDto(result, 200, 'Reports fetched successfully');
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /*
+  Get Components report along side with expiry date
+   */
+  async getComponentsReport(
+    componentFilters: ComponentFilters,
+  ): Promise<ResponseDataDto> {
+    try {
+      const queryBuilder = this.componentReportRepository
+        .createQueryBuilder('components')
+        .innerJoin('components.contract', 'contract')
+        .select([
+          `extract(day from (components.expiry_date::timestamp - now()::date::timestamp)) as day_left`,
+          `TO_CHAR(components.expiry_date, 'dd/mm/yyyy') as expiry_date`,
+          `TO_CHAR(components.start_date, 'dd/mm/yyyy') as start_date`,
+          'components.name',
+          'components.description',
+          'contract.contract_number',
+        ])
+        .where(
+          `extract(day from (components.expiry_date::timestamp - now()::date::timestamp)) >= 0`,
+        );
+      if (componentFilters?.year) {
+        queryBuilder.andWhere(
+          `EXTRACT(YEAR FROM components.expiry_date) = :year`,
+          {
+            year: componentFilters.year,
+          },
+        );
+      }
+      if (componentFilters?.department) {
+        queryBuilder.andWhere(`contract.department = :department`, {
+          department: componentFilters.department,
+        });
+      }
+      queryBuilder.orderBy('day_left', 'ASC');
+      const result = await queryBuilder.getRawMany();
+      return new ResponseDataDto(result, 200, 'Reports fetched successfully');
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /*
+  Get System tools report
+   */
+  async getSystemToolReport(
+    systemToolFilters: SystemToolFilters,
+  ): Promise<ResponseDataDto> {
+    try {
+      const queryBuilder = this.systemToolReportRepository
+        .createQueryBuilder('contract_system_tools')
+        .innerJoin('contract_system_tools.contract', 'contract')
+        .innerJoin('contract_system_tools.system_tool', 'system_tool')
+        .select([
+          `extract(day from (contract_system_tools.expire_date::timestamp - now()::date::timestamp)) as day_left`,
+          `TO_CHAR(contract_system_tools.expire_date, 'dd/mm/yyyy') as expire_date`,
+          `TO_CHAR(contract_system_tools.issue_date, 'dd/mm/yyyy') as issue_date `,
+          'contract_system_tools.price',
+          'contract_system_tools.currency',
+          'system_tool.system_tool_name as system_tool_name',
+          'system_tool.description as system_tool_description',
+          'contract.contract_number',
+        ])
+        .where(
+          `extract(day from (contract_system_tools.expire_date::timestamp - now()::date::timestamp)) >= 0`,
+        );
+      if (systemToolFilters?.year) {
+        queryBuilder.andWhere(
+          `EXTRACT(YEAR FROM contract_system_tools.expire_date) = :year`,
+          {
+            year: systemToolFilters.year,
+          },
+        );
+      }
+      if (systemToolFilters?.department) {
+        queryBuilder.andWhere(`contract.department = :department`, {
+          department: systemToolFilters.department,
+        });
+      }
+      queryBuilder.orderBy('day_left', 'ASC');
+      const result = await queryBuilder.getRawMany();
+      return new ResponseDataDto(result, 200, 'Reports fetched successfully');
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /*
+  Metrics :: Numbers of expiring per month
+   */
+  async getCertificateMetrics(
+    metricFiltersDto: MetricFiltersDto,
+  ): Promise<ResponseDataDto> {
+    try {
+      const currentYear = new Date().getFullYear();
+      const queryBuilder = this.certificateReportRepository
+        .createQueryBuilder('certificate_reports')
+        .innerJoin(
+          'certificate_reports.certificate_id',
+          'certificates',
+          'certificate_reports.certificate = certificates.id',
+        )
+        .innerJoin('certificate_reports.responsible', 'user')
+        .select([
+          `to_char(to_timestamp (EXTRACT(MONTH FROM certificate_reports.expiry_date)::text, 'MM'), 'TMmon') as month`,
+          'count(*) as total',
+        ])
+        .where(
+          `extract(day from (certificate_reports.expiry_date::timestamp - now()::date::timestamp)) >= 0`,
+        );
+      // add condition of current year
+      queryBuilder.andWhere(
+        `EXTRACT(YEAR FROM certificate_reports.expiry_date) = :year`,
+        {
+          year: currentYear,
+        },
+      );
+      if (metricFiltersDto?.user_id) {
+        queryBuilder.andWhere(`certificate_reports.responsible = :user_id`, {
+          user_id: metricFiltersDto.user_id,
+        });
+      }
+      queryBuilder.groupBy(
+        'EXTRACT(MONTH FROM certificate_reports.expiry_date)',
+      );
+      const result = await queryBuilder.getRawMany();
+      return new ResponseDataDto(result, 200, 'Reports fetched successfully');
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /*
+  Metrics :: Numbers of expiring Component per month
+   */
+  async getComponentMetrics(
+    metricFiltersDto: MetricFiltersDto,
+  ): Promise<ResponseDataDto> {
+    try {
+      const currentYear = new Date().getFullYear();
+      const queryBuilder = this.componentReportRepository
+        .createQueryBuilder('components')
+        .innerJoin('components.contract', 'contract')
+        .select([
+          `extract(day from (components.expiry_date::timestamp - now()::date::timestamp)) as day_left`,
+          `TO_CHAR(components.expiry_date, 'dd/mm/yyyy') as expiry_date`,
+          `TO_CHAR(components.start_date, 'dd/mm/yyyy') as start_date`,
+          'components.name',
+          'components.description',
+          'contract.contract_number',
+        ])
+        .where(
+          `extract(day from (components.expiry_date::timestamp - now()::date::timestamp)) >= 0`,
+        );
+      queryBuilder.andWhere(
+        `EXTRACT(YEAR FROM components.expiry_date) = :year`,
+        {
+          year: currentYear,
+        },
+      );
+      queryBuilder.orderBy('day_left', 'ASC');
+      const result = await queryBuilder.getRawMany();
+      return new ResponseDataDto(result, 200, 'Reports fetched successfully');
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /*
+  Get Metrics of all Components,Certificates and System tool
+   */
+  async getAllMetrics(): Promise<ResponseDataDto> {
+    try {
+      const currentYear = new Date().getFullYear();
+
+      // system tool
+      const queryBuilder = this.systemToolReportRepository
+        .createQueryBuilder('contract_system_tools')
+        .select([`count(*) as total`])
+        .where(
+          `extract(day from (contract_system_tools.expire_date::timestamp - now()::date::timestamp)) >= 1`,
+        );
+      queryBuilder.andWhere(
+        `EXTRACT(YEAR FROM contract_system_tools.expire_date) = :year`,
+        {
+          year: currentYear,
+        },
+      );
+      const resultSystemTool = await queryBuilder.getCount();
+
+      // certificate
+      const queryBuilderCertificate = this.certificateReportRepository
+        .createQueryBuilder('certificate_reports')
+        .select([`count(*) as total`])
+        .where(
+          `extract(day from (certificate_reports.expiry_date::timestamp - now()::date::timestamp)) >= 0`,
+        );
+      queryBuilder.andWhere(
+        `EXTRACT(YEAR FROM certificate_reports.expiry_date) = :year`,
+        {
+          year: currentYear,
+        },
+      );
+      const resultCertificate = await queryBuilderCertificate.getCount();
+
+      // components
+
+      const queryBuilderComponent = this.componentReportRepository
+        .createQueryBuilder('components')
+        .select([`count(*) as total`])
+        .where(
+          `extract(day from (components.expiry_date::timestamp - now()::date::timestamp)) >= 0`,
+        );
+      queryBuilderComponent.andWhere(
+        `EXTRACT(YEAR FROM components.expiry_date) = :year`,
+        {
+          year: currentYear,
+        },
+      );
+      const resultComponent = await queryBuilderComponent.getCount();
+      const data = [];
+      data.push({ name: 'Certificates', total: resultCertificate });
+      data.push({ name: 'Components', total: resultComponent });
+      data.push({ name: 'Tools', total: resultSystemTool });
+      return new ResponseDataDto(data);
+    } catch (e) {
+      throw e;
     }
   }
 }

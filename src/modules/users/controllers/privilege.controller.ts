@@ -4,7 +4,7 @@ import { CreatePrivilegeDto } from '../dtos/create-privilege.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 
-@UseGuards(new JwtAuthGuard())
+// @UseGuards(new JwtAuthGuard())
 @Controller('privilege')
 export class PrivilegeController {
   constructor(private readonly privilegeService: PrivilegeService) {}

@@ -10,6 +10,9 @@ import { ReportLicense } from '../report-license/entities/report-license.entity'
 import { DepartmentEntity } from '../departments/entities/department.entity';
 import { Contract } from '../contracts/entities/contract.entity';
 import { CertificateEntity } from '../certificates/entities/certificate.entity';
+import { CertificateReportEntity } from '../certificates/entities/certificate-report.entity';
+import { ComponentEntity } from '../contracts/entities/component.entity';
+import { ContractSystemToolEntity } from '../contracts/entities/contract-system-tool.entity';
 
 @Module({
   imports: [
@@ -22,6 +25,10 @@ import { CertificateEntity } from '../certificates/entities/certificate.entity';
       DepartmentEntity,
       Contract,
       CertificateEntity,
+      CertificateReportEntity,
+      ComponentEntity,
+      ContractSystemToolEntity,
+      ContractSystemToolEntity,
     ]),
   ],
   controllers: [ReportController],

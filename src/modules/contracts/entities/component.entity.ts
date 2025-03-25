@@ -24,6 +24,8 @@ export class ComponentEntity {
   @ManyToOne(() => Contract)
   @JoinColumn({ name: 'contract' })
   contract: Contract;
+  @Column({ nullable: true })
+  host_server: string;
   @CreateDateColumn()
   created_at: Date;
   @UpdateDateColumn()

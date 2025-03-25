@@ -5,7 +5,7 @@ import { RegisterUserDto } from '../dtos/register-user.dto';
 import { sendEmailV2 } from '../../../common/utils/communication.utils';
 import { ChangePasswordDto } from '../dtos/change-password.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
-@UseGuards(new JwtAuthGuard())
+// @UseGuards(new JwtAuthGuard())
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UsersService) {}

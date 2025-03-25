@@ -70,12 +70,8 @@ export class OrganizationService {
     id: number,
     organizationDto: UpdateOrganizationDto,
   ): Promise<ResponseDataDto> {
-    const {
-      name,
-      province,
-      representative_name,
-      representative_phone_number,
-    } = organizationDto;
+    const { name, province, representative_name, representative_phone_number } =
+      organizationDto;
     // check if organization  exists
     const organization: Organization =
       await this.organizationRepository.findOne({ where: { id } });
@@ -135,7 +131,7 @@ export class OrganizationService {
     return new ResponseDataDto(
       organization,
       200,
-      `Organization retreived successfully`,
+      `Organization retrieved successfully`,
     );
   }
 
