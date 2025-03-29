@@ -16,6 +16,7 @@ import { ComponentDto } from '../dtos/component.dto';
 import { ContractToolDto } from '../dtos/contract-tool.dto';
 import { ReminderDto } from '../dtos/reminder.dto';
 import { ApprovalDto } from '../enums/approval.dto';
+import { AuditMetricDto } from '../dtos/tool-metric.dto';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('contract')
@@ -166,5 +167,43 @@ export class ContractController {
     @Param('id') reminderId: number,
   ): Promise<ResponseDataDto> {
     return this.contractService.removeReminder(reminderId);
+  }
+
+  /*
+  Get tool metric
+   */
+  @Get('metric/tool/:id')
+  async getMetricTool(@Param('id') id: number): Promise<ResponseDataDto> {
+    return this.contractService.getMetricTool(id);
+  }
+
+  /*
+  Get component metric
+   */
+  @Get('metric/component/:id')
+  async getComponentTool(@Param('id') id: number): Promise<ResponseDataDto> {
+    return this.contractService.getMetricComponent(id);
+  }
+
+  /*
+  Add audit metric for tool
+   */
+  @Put('metric/tool/audit/:id')
+  async addAuditMetricTool(
+    @Param('id') id: number,
+    @Body() toolMetricDto: AuditMetricDto,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.addToolMetric(id, toolMetricDto);
+  }
+
+  /*
+  Add audit metric for component
+   */
+  @Put('metric/component/audit/:id')
+  async addAuditMetricComponent(
+    @Param('id') id: number,
+    @Body() componentMetricDto: AuditMetricDto,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.addComponentMetric(id, componentMetricDto);
   }
 }

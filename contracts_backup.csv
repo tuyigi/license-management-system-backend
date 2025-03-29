@@ -1,0 +1,3 @@
+id,contract_number,payment_frequency,annual_license_fees,currency,start_date,end_date,description,contract_status,document_link,number_system_users,created_at,updated_at,approval_status,approval_comment,vendor,system_tool,department
+2,1234,YEAR,30000000,RWF,2025-03-25 00:00:00,2025-06-30 00:00:00,Manage and monitor database performance,VALID,,50,2025-03-25 14:22:39.738685,2025-03-25 14:26:13.881766,APPROVED,done,1,,2
+1,12345,YEAR,30000,RWF,2025-03-25 00:00:00,2025-06-30 00:00:00,Manage and monitor database performance,VALID,,40,2025-03-25 14:21:10.948068,2025-03-25 14:26:22.594941,APPROVED,done,1,,2

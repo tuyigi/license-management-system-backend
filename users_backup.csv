@@ -1,0 +1,6 @@
+id,first_name,last_name,username,email,status,user_type,created_at,updated_at,role_id,organization_id,department
+4,Carine,Iradukunda,ciradukunda,ciradukunda@bnr.uat,ENABLED,SUPER_ADMIN,2025-03-04 13:38:01.565337,2025-03-04 13:38:01.565337,1,1,1
+1,Gilbert,TUYISHIME,gtuyishime,gtuyishime@bnr.rw,ENABLED,LICENSE_OWNER,2025-03-25 08:59:15.960835,2025-03-25 08:59:15.960835,3,1,2
+2,UMUHOZA,Marie,mumuhoza,mumuhoza@bnr.rw,ENABLED,CONTRACT_MANAGER,2025-03-25 09:53:02.669536,2025-03-25 09:53:02.669536,2,1,
+3,Sonia,Umutesi,sumutesi,sumutesi@bnr.rw,ENABLED,LICENSE_OWNER,2025-03-25 14:00:05.378183,2025-03-25 14:00:05.378183,3,1,3
+5,"Kagarama,",Cedric,ckagarama,ckagarama@bnr.rw,ENABLED,LICENSE_OWNER,2025-03-25 14:00:53.026322,2025-03-25 14:00:53.026322,3,1,1

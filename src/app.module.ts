@@ -15,6 +15,7 @@ import { ReportLicenseModule } from './modules/report-license/report-license.mod
 import { SystemFunctionsModule } from './modules/system-functions/system-functions.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { CertificatesModule } from './modules/certificates/certificates.module';
+import { MetricModule } from './modules/metric/metric.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { CertificatesModule } from './modules/certificates/certificates.module';
     LdapAuthenticationModule,
     ContractModule,
     SystemToolModule,
+    MetricModule,
     ReportLicenseModule,
     SystemFunctionsModule,
     DepartmentsModule,
