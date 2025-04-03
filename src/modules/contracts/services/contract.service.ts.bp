@@ -22,10 +22,6 @@ import { ContractReminderEntity } from '../entities/contract-reminder.entity';
 import { ReminderDto } from '../dtos/reminder.dto';
 import { User } from '../../users/entities/user.entity';
 import { ApprovalDto } from '../enums/approval.dto';
-import { ContractSystemToolMetricEntity } from '../entities/contract-system-tool-metric.entity';
-import { ComponentMetricEntity } from '../entities/component-metric.entity';
-import { MetricEntity } from '../../metric/entities/metric.entity';
-import { AuditMetricDto } from '../dtos/tool-metric.dto';
 
 @Injectable()
 export class ContractService {
@@ -47,12 +43,6 @@ export class ContractService {
     private readonly contractReminderRepository: Repository<ContractReminderEntity>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(ContractSystemToolMetricEntity)
-    private readonly toolMetricRepository: Repository<ContractSystemToolMetricEntity>,
-    @InjectRepository(ComponentMetricEntity)
-    private readonly componentMetricRepository: Repository<ComponentMetricEntity>,
-    @InjectRepository(MetricEntity)
-    private readonly metricRepository: Repository<MetricEntity>,
   ) {}
 
   /*
@@ -107,18 +97,18 @@ export class ContractService {
       const savedContract = await this.contractRepository.save(contract);
 
       // start add system to contract
-      // for (const systemId of contractDto.system_tools) {
-      //   const systemTool: SystemTool = await this.systemToolRepository.findOne({
-      //     where: { id: systemId },
-      //   });
-      //   if (systemTool) {
-      //     const contractTool: ContractSystemToolEntity =
-      //       new ContractSystemToolEntity();
-      //     contractTool.system_tool = systemTool;
-      //     contractTool.contract = savedContract;
-      //     await this.contractToolRepository.save(contractTool);
-      //   }
-      // }
+      for (const systemId of contractDto.system_tools) {
+        const systemTool: SystemTool = await this.systemToolRepository.findOne({
+          where: { id: systemId },
+        });
+        if (systemTool) {
+          const contractTool: ContractSystemToolEntity =
+            new ContractSystemToolEntity();
+          contractTool.system_tool = systemTool;
+          contractTool.contract = savedContract;
+          await this.contractToolRepository.save(contractTool);
+        }
+      }
       // end system to contract
 
       // generate payment batches of contract
@@ -274,40 +264,12 @@ export class ContractService {
         throw new NotFoundException(
           `Contract with ID: ${componentDto.contract_id}`,
         );
-
-      // validate metrics if they are provided
-      const metrics: MetricEntity[] = [];
-      if (componentDto.metrics.length > 0) {
-        let notFoundCount = 0;
-        for (const metricId of componentDto.metrics) {
-          const metric = await this.metricRepository.findOne({
-            where: { id: metricId },
-          });
-          if (!metric) {
-            notFoundCount++;
-          } else {
-            metrics.push(metric);
-          }
-        }
-        if (notFoundCount > 0)
-          throw new BadRequestException('Metric not found');
-      }
-
       component.contract = contract;
       component.description = componentDto.description;
       component.start_date = new Date(`${componentDto.start_date}`);
       component.expiry_date = new Date(`${componentDto.expiry_date}`);
-      component.host_server = componentDto.host_server || null;
       component.name = componentDto.name;
       const saved = await this.componentRepository.save(component);
-
-      // save contract metric tool details
-      for (const metric of metrics) {
-        const toolMetric = new ComponentMetricEntity();
-        toolMetric.metric = metric;
-        toolMetric.component = saved;
-        await this.componentMetricRepository.save(toolMetric);
-      }
       return new ResponseDataDto(saved, 201, `Component added successfully`);
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
@@ -366,28 +328,9 @@ export class ContractService {
         throw new BadRequestException(
           `Expire date should be greater than Issue date`,
         );
-
-      // validate metrics if they are provided
-      const metrics: MetricEntity[] = [];
-      if (contractToolDto?.metrics?.length > 0) {
-        let notFoundCount = 0;
-        for (let i = 0; i < contractToolDto.metrics.length; i++) {
-          const metric = await this.metricRepository.findOne({
-            where: { id: contractToolDto.metrics[i] },
-          });
-          if (!metric) {
-            notFoundCount++;
-          } else {
-            metrics.push(metric);
-          }
-        }
-        if (notFoundCount > 0)
-          throw new BadRequestException('Metric not found');
-      }
       contractTool = new ContractSystemToolEntity();
       contractTool.contract = contract;
       contractTool.system_tool = system;
-      contractTool.host_server = contractToolDto.host_server || null;
       contractTool.issue_date = new Date(
         Date.parse(`${contractToolDto.issue_date}`),
       );
@@ -397,16 +340,6 @@ export class ContractService {
       contractTool.currency = contractToolDto.currency;
       contractTool.price = contractToolDto.price;
       const saved = await this.contractToolRepository.save(contractTool);
-
-      // save contract metric tool details
-      for (let i = 0; i < metrics.length; i++) {
-        console.log('insert metric');
-        const toolMetric = new ContractSystemToolMetricEntity();
-        toolMetric.metric = metrics[i];
-        toolMetric.contract_system_tool = saved;
-        await this.toolMetricRepository.save(toolMetric);
-      }
-
       return new ResponseDataDto(saved);
     } catch (e) {
       throw e;
@@ -478,34 +411,9 @@ export class ContractService {
           tools: { system_tool: true },
         },
       });
-
       if (!contract)
         throw new NotFoundException(`Contract with ID:${id} not found`);
-
-      // retrieve contract system tools with metrics
-      const rawQuery = `
-      SELECT cst.id,cst.price,cst.currency,cst.issue_date,cst.expire_date,cst.created_at,cst.updated_at,
-      cstm.id as contract_system_tool_metric_id,cstm.entitlement,cstm.utilisation,cstm.license_gap,cstm.contract_system_tool,
-      cstm.metric,cstm.comment,   st.system_tool_name, st.description,st.department,m.name
-       FROM contract_system_tools cst
-      LEFT JOIN contract_system_tool_metric cstm ON cst.id = cstm.contract_system_tool
-      INNER JOIN system_tools st ON cst.system_tool = st.id
-      LEFT JOIN metrics m ON cstm.metric = m.id
-      WHERE cst.contract = $1`;
-      const resultTools = await this.contractToolRepository.query(rawQuery, [
-        id,
-      ]);
-      const rawQueryComponents = `select c.id,c.name,c.description,c.start_date,c.expiry_date,c.created_at,c.updated_at,c.contract,c.host_server, cm.id as component_metric_id, cm.entitlement,cm.utilisation,cm.license_gap,cm.created_at,cm.updated_at,cm.component,cm.metric,cm.comment,m.id as metric_id,m.name as metric_name,m.created_at,m.updated_at  from components c left join component_metric cm on c.id=cm.component left join metrics m on cm.metric=m.id where c.contract= $1`;
-      const resultComponents = await this.contractToolRepository.query(
-        rawQueryComponents,
-        [id],
-      );
-      const response = {
-        ...contract,
-        toolsMetrics: resultTools,
-        componentMetrics: resultComponents,
-      };
-      return new ResponseDataDto(response);
+      return new ResponseDataDto(contract);
     } catch (e) {
       throw e;
     }
@@ -564,101 +472,6 @@ export class ContractService {
         200,
         'Reminder removed successfully',
       );
-    } catch (e) {
-      throw e;
-    }
-  }
-
-  /*
-  View metric tool
-   */
-  async getMetricTool(
-    contract_system_tool_id: number,
-  ): Promise<ResponseDataDto> {
-    try {
-      const contract_system_tool = await this.contractToolRepository.findOne({
-        where: { id: contract_system_tool_id },
-      });
-      if (!contract_system_tool)
-        throw new NotFoundException(
-          `Contract System Tool with ${contract_system_tool_id} not found`,
-        );
-      const metrics = await this.toolMetricRepository.find({
-        where: { contract_system_tool: { id: contract_system_tool_id } },
-        relations: { metric: true },
-      });
-      return new ResponseDataDto(metrics);
-    } catch (e) {
-      throw e;
-    }
-  }
-
-  /*
-  View metric component
-   */
-  async getMetricComponent(
-    contract_component_id: number,
-  ): Promise<ResponseDataDto> {
-    try {
-      const contract_component = await this.componentRepository.findOne({
-        where: { id: contract_component_id },
-      });
-      if (!contract_component)
-        throw new NotFoundException(
-          `Component with ID: ${contract_component_id} not found`,
-        );
-      const metric = await this.componentMetricRepository.findOne({
-        where: { component: { id: contract_component_id } },
-      });
-      return new ResponseDataDto(metric);
-    } catch (e) {
-      throw e;
-    }
-  }
-
-  /*
-  Add Metric Audit Tool
-   */
-  async addToolMetric(
-    id: number,
-    toolMetricDto: AuditMetricDto,
-  ): Promise<ResponseDataDto> {
-    try {
-      const contract_system_tool_metric =
-        await this.toolMetricRepository.findOne({ where: { id } });
-      if (!contract_system_tool_metric)
-        throw new NotFoundException(`Metrics for ID ${id} not found`);
-      contract_system_tool_metric.entitlement = toolMetricDto.entitlement || 0;
-      contract_system_tool_metric.utilisation = toolMetricDto.utilisation || 0;
-      contract_system_tool_metric.license_gap =
-        contract_system_tool_metric.entitlement -
-        contract_system_tool_metric.utilisation;
-      contract_system_tool_metric.comment = toolMetricDto.comment;
-      await this.toolMetricRepository.save(contract_system_tool_metric);
-      return new ResponseDataDto(contract_system_tool_metric);
-    } catch (e) {
-      throw e;
-    }
-  }
-
-  /*
-  Add Metric Audit Component
-   */
-  async addComponentMetric(
-    id: number,
-    componentMetricDto: AuditMetricDto,
-  ): Promise<ResponseDataDto> {
-    try {
-      const component_metric = await this.componentMetricRepository.findOne({
-        where: { id },
-      });
-      if (!component_metric)
-        throw new NotFoundException(`Metrics for ID ${id} not found`);
-      component_metric.entitlement = componentMetricDto.entitlement || 0;
-      component_metric.utilisation = componentMetricDto.utilisation || 0;
-      component_metric.comment = componentMetricDto.comment;
-      await this.componentMetricRepository.save(component_metric);
-      return new ResponseDataDto(component_metric);
     } catch (e) {
       throw e;
     }

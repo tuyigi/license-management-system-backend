@@ -1,0 +1,4 @@
+id,name,description,status,created_at,updated_at
+1,roletest,test role,active,2025-03-04 16:17:26,2025-03-04 16:17:28
+2,CONTRACT_MANAGER,contract manager,ENABLED,2025-03-24 18:02:02.491853,2025-03-24 18:02:02.491853
+3,LICENSE_OWNER,license owner,ENABLED,2025-03-24 18:02:34.903991,2025-03-24 18:02:34.903991

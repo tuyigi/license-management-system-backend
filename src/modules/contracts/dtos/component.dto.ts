@@ -15,4 +15,8 @@ export class ComponentDto {
   @IsNotEmpty()
   @IsNumber()
   contract_id: number;
+  @IsOptional()
+  metrics: number[];
+  @IsOptional()
+  host_server: string;
 }

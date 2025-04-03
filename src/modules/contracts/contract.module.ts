@@ -11,6 +11,9 @@ import { ComponentEntity } from './entities/component.entity';
 import { ContractSystemToolEntity } from './entities/contract-system-tool.entity';
 import { ContractReminderEntity } from './entities/contract-reminder.entity';
 import { User } from '../users/entities/user.entity';
+import { ContractSystemToolMetricEntity } from './entities/contract-system-tool-metric.entity';
+import { ComponentMetricEntity } from './entities/component-metric.entity';
+import { MetricEntity } from '../metric/entities/metric.entity';
 
 @Module({
   imports: [
@@ -24,6 +27,9 @@ import { User } from '../users/entities/user.entity';
       ContractSystemToolEntity,
       ContractReminderEntity,
       User,
+      ContractSystemToolMetricEntity,
+      ComponentMetricEntity,
+      MetricEntity,
     ]),
   ],
   providers: [ContractService],

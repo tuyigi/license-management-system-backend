@@ -1,5 +1,5 @@
 import { CurrencyEnum } from '../../../common/enums/currency.enum';
-import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class ContractToolDto {
   @IsNumber({}, { message: 'Price should be a number' })
@@ -10,4 +10,8 @@ export class ContractToolDto {
   issue_date: string;
   @IsNotEmpty({ message: 'Please provide valid expire date' })
   expire_date: string;
+  @IsOptional()
+  metrics: number[];
+  @IsOptional()
+  host_server: string;
 }

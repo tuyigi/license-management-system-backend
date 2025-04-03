@@ -1,7 +1,11 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ReportService } from '../services/report.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
+import { CertificateFilterDto } from '../dtos/certificate-filters.dto';
+import { ComponentFilters } from '../dtos/component-filters.dto';
+import { SystemToolFilters } from '../dtos/SystemTool-filters';
+import { MetricFiltersDto } from '../dtos/metric-filters.dto';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('reports')
@@ -99,8 +103,60 @@ export class ReportController {
   /*
   Get vendors payment numbers summary per specific department
    */
+
   @Get('/vendorPaymentsDepartment/:id')
   async getVendorPayments(@Param('id') id: number): Promise<ResponseDataDto> {
     return this.reportService.getVendorPayments(id);
+  }
+
+  /*
+  Get Certificate report 
+   */
+
+  @Get('/certificate')
+  getCertificateReport(
+    @Query() certificateFilterDto: CertificateFilterDto,
+  ): Promise<ResponseDataDto> {
+    return this.reportService.getCertificateReport(certificateFilterDto);
+  }
+
+  /*
+  Get Component report
+   */
+
+  @Get('/components')
+  getComponentReport(
+    @Query() componentFilters: ComponentFilters,
+  ): Promise<ResponseDataDto> {
+    return this.reportService.getComponentsReport(componentFilters);
+  }
+
+  /*
+  Get System Tool report
+  */
+
+  @Get('/systemTool')
+  getSystemToolReport(
+    @Query() systemToolFilters: SystemToolFilters,
+  ): Promise<ResponseDataDto> {
+    return this.reportService.getSystemToolReport(systemToolFilters);
+  }
+
+  /*
+  Get Certificate Metrics
+   */
+  @Get('/metrics/certificate')
+  getCertificateMetrics(
+    @Query() metricFiltersDto: MetricFiltersDto,
+  ): Promise<ResponseDataDto> {
+    return this.reportService.getCertificateMetrics(metricFiltersDto);
+  }
+
+  /*
+  Get All Metrics
+   */
+  @Get('/metrics/all')
+  getAllMetrics(): Promise<ResponseDataDto> {
+    return this.reportService.getAllMetrics();
   }
 }
