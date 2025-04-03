@@ -4,12 +4,12 @@ import { ValidationPipe } from './common/validation/validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix('api/v1');
 
   app.enableCors({
-    origin: ['http://192.168.50.118:3000','*'],
+    origin: ['http://localhost:3000', '*'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
@@ -23,7 +23,10 @@ async function bootstrap() {
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.header(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-Requested-With',
+    );
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
