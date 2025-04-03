@@ -28,8 +28,8 @@ export class AuthController {
   @Public()
   //@UseGuards(LocalAuthGuard)
   @HttpCode(200)
-  @Get('sign-in')
-  async signIn(@Query('sAMAccountName') username: string) {
-    return this.authService.signIn(username);
+  @Post('sign-in')
+  async signIn(@Body() signinDto: SigninDto) {
+    return this.authService.signIn(signinDto);
   }
 }
