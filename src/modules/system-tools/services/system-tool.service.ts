@@ -112,4 +112,41 @@ export class SystemToolService {
       throw e;
     }
   }
+
+  /*
+Upload new System / tool
+ */
+
+  async uploadSystemTools(
+    systemToolDtos: SystemToolDto[],
+  ): Promise<ResponseDataDto> {
+    console.log(systemToolDtos);
+    const savedTools = [];
+
+    for (const dto of systemToolDtos) {
+      const department = await this.departmentRepository.findOne({
+        where: { id: dto.department },
+      });
+
+      if (!department) {
+        throw new NotFoundException(
+          `Department with ID ${dto.department} not found`,
+        );
+      }
+
+      const tool = new SystemTool();
+      tool.system_tool_name = dto.name;
+      tool.description = dto.description || '';
+      tool.department = department;
+
+      const saved = await this.systemToolRepository.save(tool);
+      savedTools.push(saved);
+    }
+
+    return new ResponseDataDto(
+      savedTools,
+      201,
+      `${savedTools.length} system tools saved successfully`,
+    );
+  }
 }
