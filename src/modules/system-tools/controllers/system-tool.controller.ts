@@ -78,7 +78,7 @@ export class SystemToolController {
     return this.systemToolService.uploadSystemTools(rows); // <-- updated method
   }*/
   @Post('upload')
-  async uploadSystemToolJson(
+  async uploadSystemTool(
     @Body() data: SystemToolDto[],
   ): Promise<ResponseDataDto> {
     return this.systemToolService.uploadSystemTools(data);
