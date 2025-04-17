@@ -119,11 +119,11 @@ Upload new System / tool
  */
 
   async uploadSystemTools(
-    systemToolDtos: SystemToolDto[],
+    systemToolDto: SystemToolDto[],
   ): Promise<ResponseDataDto> {
     const savedTools = [];
     try {
-      for (const dto of systemToolDtos) {
+      for (const dto of systemToolDto) {
         const department = await this.departmentRepository.findOne({
           where: { id: dto.department },
         });

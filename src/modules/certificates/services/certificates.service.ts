@@ -241,4 +241,51 @@ export class CertificatesService {
       throw e;
     }
   }
+
+  /*
+    Upload Certificate
+   */
+  async uploadCertificate(
+    certificateDto: CertificateDto[],
+  ): Promise<ResponseDataDto> {
+    const savedCertificates = [];
+    try {
+      for (const dto of certificateDto) {
+        const department: DepartmentEntity =
+          await this.departmentRepository.findOne({
+            where: { id: dto.department_id },
+          });
+        if (!department)
+          throw new NotFoundException(
+            `Department with ID:${dto.department_id} not found`,
+          );
+        if (
+          new Date(`${dto.issue_date}`).getMilliseconds() >
+          new Date(`${dto.expiration_date}`).getMilliseconds()
+        )
+          throw new BadRequestException(
+            `Expiration date should be greater than issue date`,
+          );
+        const certificate: CertificateEntity = new CertificateEntity();
+        certificate.certificate = dto.certificate_name;
+        certificate.issue_date = new Date(Date.parse(`${dto.issue_date}`));
+        certificate.expiry_date = new Date(
+          Date.parse(`${dto.expiration_date}`),
+        );
+        certificate.certificate_type = dto.certificate_type;
+        certificate.department_id = department;
+        certificate.user_organization = dto.user_organization;
+        certificate.description = dto.description;
+        const saved = await this.certificateRepository.save(certificate);
+        savedCertificates.push(saved);
+      }
+      return new ResponseDataDto(
+        savedCertificates,
+        201,
+        'Certificate added successfully',
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
 }
