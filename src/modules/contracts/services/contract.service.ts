@@ -26,10 +26,12 @@ import { ContractSystemToolMetricEntity } from '../entities/contract-system-tool
 import { ComponentMetricEntity } from '../entities/component-metric.entity';
 import { MetricEntity } from '../../metric/entities/metric.entity';
 import { AuditMetricDto } from '../dtos/tool-metric.dto';
+import { MailService } from '../../mail/mail.service';
 
 @Injectable()
 export class ContractService {
   constructor(
+    private readonly mailService: MailService,
     @InjectRepository(Vendor)
     private readonly vendorRepository: Repository<Vendor>,
     @InjectRepository(Contract)
@@ -53,6 +55,8 @@ export class ContractService {
     private readonly componentMetricRepository: Repository<ComponentMetricEntity>,
     @InjectRepository(MetricEntity)
     private readonly metricRepository: Repository<MetricEntity>,
+    @InjectRepository(DepartmentEntity)
+    private readonly departmentEntityRepository: Repository<DepartmentEntity>,
   ) {}
 
   /*
@@ -228,11 +232,35 @@ export class ContractService {
       const contract: Contract = await this.contractRepository.findOne({
         where: { id },
       });
+      const contractNumber: Contract = await this.contractRepository.findOne({
+        where: { id },
+        select: ['contract_number'],
+      });
+      const contractDepartment: Contract =
+        await this.contractRepository.findOne({
+          where: { id },
+          select: ['department'],
+        });
+      const contractDepartmentId = contractDepartment?.department?.id;
+      const departmentEmail = await this.departmentEntityRepository.findOne({
+        where: { id: contractDepartmentId },
+        select: ['department_email'],
+      });
       if (!contract)
         throw new NotFoundException(`Contract with ID: ${id} not found`);
       contract.approval_status = status;
       contract.approval_comment = approvalDto.comment;
       await this.contractRepository.save(contract);
+      const email = departmentEmail?.department_email;
+      const contract_no = contractNumber?.contract_number;
+      if (status == 'REJECTED') {
+        await this.mailService.sendFeedbackEmail(
+          email,
+          status,
+          contract_no,
+          approvalDto.comment,
+        );
+      }
       return new ResponseDataDto(
         contract,
         200,
