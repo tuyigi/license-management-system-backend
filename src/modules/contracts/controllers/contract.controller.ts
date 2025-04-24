@@ -5,7 +5,9 @@ import {
   Param,
   Post,
   Put,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ContractService } from '../services/contract.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
@@ -17,6 +19,9 @@ import { ContractToolDto } from '../dtos/contract-tool.dto';
 import { ReminderDto } from '../dtos/reminder.dto';
 import { ApprovalDto } from '../enums/approval.dto';
 import { AuditMetricDto } from '../dtos/tool-metric.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import * as XLSX from 'xlsx';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('contract')
@@ -205,5 +210,31 @@ export class ContractController {
     @Body() componentMetricDto: AuditMetricDto,
   ): Promise<ResponseDataDto> {
     return this.contractService.addComponentMetric(id, componentMetricDto);
+  }
+
+  /*
+  Upload Contracts
+   */
+
+  /*  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+    }),
+  )
+  async uploadSystemTool(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<ResponseDataDto> {
+    const workbook = XLSX.read(file.buffer, { type: 'buffer' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json<ContractDto>(sheet);
+    return this.contractService.uploadContract(rows); // <-- updated method
+  }*/
+
+  @Post('upload')
+  async uploadLicenseContract(
+    @Body() data: ContractDto[],
+  ): Promise<ResponseDataDto> {
+    return this.contractService.uploadContract(data);
   }
 }

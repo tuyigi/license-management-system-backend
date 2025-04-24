@@ -105,23 +105,6 @@ export class ContractService {
         ? contractDto.contract_number
         : contractNumber;
       const savedContract = await this.contractRepository.save(contract);
-
-      // start add system to contract
-      // for (const systemId of contractDto.system_tools) {
-      //   const systemTool: SystemTool = await this.systemToolRepository.findOne({
-      //     where: { id: systemId },
-      //   });
-      //   if (systemTool) {
-      //     const contractTool: ContractSystemToolEntity =
-      //       new ContractSystemToolEntity();
-      //     contractTool.system_tool = systemTool;
-      //     contractTool.contract = savedContract;
-      //     await this.contractToolRepository.save(contractTool);
-      //   }
-      // }
-      // end system to contract
-
-      // generate payment batches of contract
       await this.paymentService.generateBatches(savedContract.id);
       return new ResponseDataDto(
         savedContract,
@@ -664,5 +647,68 @@ export class ContractService {
     }
   }
 
+  /*
+  Uploading License Contracts
+  */
+  async uploadContract(contractDto: ContractDto[]): Promise<ResponseDataDto> {
+    const SavedContractsArray = [];
+    try {
+      for (const dto of contractDto) {
+        const vendor: Vendor = await this.vendorRepository.findOne({
+          where: { id: dto.vendor },
+        });
+        if (!vendor)
+          throw new NotFoundException(
+            `Vendor with ID: ${dto.vendor} doesn't exist`,
+          );
+        const department: DepartmentEntity =
+          await this.departmentRepository.findOne({
+            where: {
+              id: dto.department,
+            },
+          });
+        if (!department)
+          throw new NotFoundException(
+            `Department with ID: ${dto.department} doesn't exist`,
+          );
 
+        if (
+          new Date(`${dto.start_date}`).getMilliseconds() >
+          new Date(`${dto.end_date}`).getMilliseconds()
+        )
+          throw new BadRequestException(
+            `End date should be greater than start date`,
+          );
+        const contract: Contract = new Contract();
+        // Generate Contract Number
+        const counter: number = await this.contractRepository.countBy({
+          department: { id: dto.department },
+          vendor: { id: dto.vendor },
+        });
+        const contractNumber = `BNR/${dto.department}/${vendor.vendor_name}/${counter}`;
+        contract.start_date = new Date(Date.parse(`${dto.start_date}`));
+        contract.end_date = new Date(Date.parse(`${dto.end_date}`));
+        contract.annual_license_fees = dto.annual_license_fees;
+        contract.currency = dto.currency;
+        contract.vendor = vendor;
+        contract.department = department;
+        contract.description = dto.description;
+        contract.document_link = dto.document_link;
+        contract.number_system_users = dto.number_system_users;
+        contract.contract_number = dto.contract_number
+          ? dto.contract_number
+          : contractNumber;
+        const savedContract = await this.contractRepository.save(contract);
+        SavedContractsArray.push(savedContract);
+        await this.paymentService.generateBatches(savedContract.id);
+      }
+      return new ResponseDataDto(
+        SavedContractsArray,
+        201,
+        `Contracts uploaded successfully`,
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
 }
