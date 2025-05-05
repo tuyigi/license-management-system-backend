@@ -201,9 +201,9 @@ export class ContractService {
    */
   async getContractDepartment(id: number): Promise<ResponseDataDto> {
     try {
-      const contract = await this.contractRepository.findOne({ where: { id } });
+      /*  const contract = await this.contractRepository.findOne({ where: { id } });
       if (!contract)
-        throw new NotFoundException(`Contract with ID: ${id} not found`);
+        throw new NotFoundException(`Contract with ID: ${id} not found`);*/
       const contracts = await this.contractRepository.find({
         where: { department: { id } },
         relations: {
@@ -253,7 +253,7 @@ export class ContractService {
       await this.contractRepository.save(contract);
       const email = departmentEmail?.department_email;
       const contract_no = contractNumber?.contract_number;
-      if (status == 'REJECTED') {
+      if (status == 'REJECTED' || status == 'APPROVED') {
         await this.mailService.sendFeedbackEmail(
           email,
           status,
@@ -737,6 +737,30 @@ export class ContractService {
       );
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+Get All Contracts Tool Metrics by department
+ */
+
+  async getContractsToolsDepartment(id: number): Promise<ResponseDataDto> {
+    try {
+      const rawQuery = `
+          select cstm.entitlement,cstm.utilisation,cstm.license_gap,cstm.comment,st.system_tool_name,st.department from system_tools st 
+              full join contract_system_tools cst on st.id = cst.system_tool
+            full join contract_system_tool_metric cstm on cst.id = cstm.contract_system_tool
+          where cstm.entitlement is not null and st.department = $1`;
+      const resultTools = await this.contractToolRepository.query(rawQuery, [
+        id,
+      ]);
+
+      const response = {
+        toolsMetrics: resultTools,
+      };
+      return new ResponseDataDto(response);
+    } catch (e) {
+      throw e;
     }
   }
 }
