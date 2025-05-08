@@ -225,4 +225,12 @@ export class ContractController {
   ): Promise<ResponseDataDto> {
     return this.contractService.getContractsToolsDepartment(id);
   }
+
+  /*
+   Contracts Expiration Reminders By department
+   */
+  @Get(`reminders/department/:id`)
+  async getContractsRemindersByDepartment(@Param('id') id: number) {
+    return this.contractService.getContractsRemindersByDepartment(id);
+  }
 }

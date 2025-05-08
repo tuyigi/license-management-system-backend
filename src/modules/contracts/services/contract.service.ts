@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Vendor } from '../../vendors/entities/vendor.entity';
-import { Repository } from 'typeorm';
+import { Raw, Repository } from "typeorm";
 import { Contract } from '../entities/contract.entity';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { ContractDto } from '../dtos/contract.dto';
@@ -762,5 +762,35 @@ Get All Contracts Tool Metrics by department
     } catch (e) {
       throw e;
     }
+  }
+
+  //Contracts Expiration Reminders By department
+  async getContractsRemindersByDepartment(id: number) {
+    const department: DepartmentEntity =
+      await this.departmentRepository.findOne({
+        where: { id },
+      });
+
+    if (!department) {
+      throw new NotFoundException(`Department with ID: ${id} not found`);
+    }
+
+    const expiringSoon = await this.contractRepository.find({
+      where: {
+        department: { id: department.id },
+        end_date: Raw(
+          (alias) =>
+            `DATE(${alias}) BETWEEN CURRENT_DATE + INTERVAL '1 day' AND CURRENT_DATE + INTERVAL '15 days'`,
+        ),
+      },
+      relations: {
+        department: true,
+      },
+    });
+
+    return {
+      count: expiringSoon.length || 0,
+      items: expiringSoon || [],
+    };
   }
 }
