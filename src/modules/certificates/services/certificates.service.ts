@@ -5,14 +5,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DepartmentEntity } from '../../departments/entities/department.entity';
-import { Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import { CertificateEntity } from '../entities/certificate.entity';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { CertificateDto } from '../dtos/certificate.dto';
 import { CertificateReportDto } from '../dtos/certificate-report.dto';
 import { User } from '../../users/entities/user.entity';
 import { CertificateReportEntity } from '../entities/certificate-report.entity';
-
 @Injectable()
 export class CertificatesService {
   constructor(
@@ -287,5 +286,35 @@ export class CertificatesService {
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
     }
+  }
+
+  //Certificate Expiration reminders
+  async getReminders(id: number) {
+    const department: DepartmentEntity =
+      await this.departmentRepository.findOne({
+        where: { id },
+      });
+
+    if (!department) {
+      throw new NotFoundException(`Department with ID: ${id} not found`);
+    }
+
+    const expiringSoon = await this.certificateRepository.find({
+      where: {
+        department_id: { id: department.id },
+        expiry_date: Raw(
+          (alias) =>
+            `DATE(${alias}) BETWEEN CURRENT_DATE + INTERVAL '1 day' AND CURRENT_DATE + INTERVAL '15 days'`,
+        ),
+      },
+      relations: {
+        department_id: true,
+      },
+    });
+
+    return {
+      count: expiringSoon.length || 0,
+      items: expiringSoon || [],
+    };
   }
 }

@@ -5,6 +5,7 @@ import { CertificateDto } from '../dtos/certificate.dto';
 import { CertificateReportDto } from '../dtos/certificate-report.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 import { SystemToolDto } from "../../system-tools/dtos/system-tool.dto";
+import { CertificateEntity } from "../entities/certificate.entity";
 
 @UseGuards(new JwtAuthGuard())
 @Controller('certificate')
@@ -106,5 +107,13 @@ async uploadSystemTool(
     @Body() data: CertificateDto[],
   ): Promise<ResponseDataDto> {
     return this.certificateService.uploadCertificate(data);
+  }
+
+  //Certificate Expiration reminders
+  @Get('reminders/department/:id')
+  async getReminders(
+    @Param('id') id: number,
+  ): Promise<{ count: number; items: CertificateEntity[] }> {
+    return this.certificateService.getReminders(id);
   }
 }
