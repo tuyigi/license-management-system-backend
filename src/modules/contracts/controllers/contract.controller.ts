@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ContractService } from '../services/contract.service';
@@ -69,8 +70,13 @@ export class ContractController {
     @Param('id') id: number,
     @Param('status') status: ApprovalStatusEnum,
     @Body() approvalDto: ApprovalDto,
-  ): Promise<ResponseDataDto> {
-    return this.contractService.changeApprovalStatus(id, status, approvalDto);
+  ) {
+    const result = await this.contractService.changeApprovalStatus(
+      id,
+      status,
+      approvalDto,
+    );
+    return { message: 'Contract status changed successfully', data: result };
   }
 
   /*

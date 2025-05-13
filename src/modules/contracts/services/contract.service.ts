@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Vendor } from '../../vendors/entities/vendor.entity';
-import { Raw, Repository } from "typeorm";
+import { Raw, Repository } from 'typeorm';
 import { Contract } from '../entities/contract.entity';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { ContractDto } from '../dtos/contract.dto';
@@ -227,7 +227,7 @@ export class ContractService {
     id: number,
     status: ApprovalStatusEnum,
     approvalDto: ApprovalDto,
-  ): Promise<ResponseDataDto> {
+  ) {
     try {
       const contract: Contract = await this.contractRepository.findOne({
         where: { id },
@@ -253,19 +253,27 @@ export class ContractService {
       await this.contractRepository.save(contract);
       const email = departmentEmail?.department_email;
       const contract_no = contractNumber?.contract_number;
-      if (status == 'REJECTED' || status == 'APPROVED') {
+      await this.mailService.sendFeedbackEmail(
+        email,
+        status,
+        contract_no,
+        approvalDto.comment,
+      );
+      return contract;
+
+      /*      if (status == 'REJECTED' || status == 'APPROVED') {
         await this.mailService.sendFeedbackEmail(
           email,
           status,
           contract_no,
           approvalDto.comment,
         );
-      }
-      return new ResponseDataDto(
+      }*/
+      /*     return new ResponseDataDto(
         contract,
         200,
         'Contract status changed successfully',
-      );
+      );*/
     } catch (e) {
       throw new BadRequestException(`${e.message()}`);
     }

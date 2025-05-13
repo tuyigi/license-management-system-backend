@@ -29,8 +29,8 @@ export class ReportService {
   constructor(
     @InjectRepository(Organization)
     private readonly organizationRepository: Repository<Organization>,
-    @InjectRepository(LicenseRequest)
-    private readonly licenseRequestRepository: Repository<LicenseRequest>,
+    @InjectRepository(Contract)
+    private readonly licenseRequestRepository: Repository<Contract>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(OrganizationLicense)
@@ -79,10 +79,10 @@ export class ReportService {
    */
   async getLicenseRequestStats(): Promise<ResponseDataDto> {
     try {
-      const qb = await this.licenseRequestRepository
-        .createQueryBuilder('license_requests')
-        .select(' COUNT(*) as total, license_requests.request_status')
-        .groupBy('license_requests.request_status')
+      const qb = await this.contractRepository
+        .createQueryBuilder('contracts')
+        .select(' COUNT(*) as total, approval_status')
+        .groupBy('approval_status')
         .getRawMany();
       return new ResponseDataDto(
         qb,
