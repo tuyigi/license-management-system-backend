@@ -1,11 +1,18 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { CertificatesService } from '../services/certificates.service';
 import { CertificateDto } from '../dtos/certificate.dto';
 import { CertificateReportDto } from '../dtos/certificate-report.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
-import { SystemToolDto } from "../../system-tools/dtos/system-tool.dto";
-import { CertificateEntity } from "../entities/certificate.entity";
+import { CertificateEntity } from '../entities/certificate.entity';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('certificate')
@@ -88,20 +95,7 @@ export class CertificatesController {
     return this.certificateService.getReportedCertificateByUser(id);
   }
 
-  /*  @Post('upload')
-@UseInterceptors(
-  FileInterceptor('file', {
-    storage: memoryStorage(),
-  }),
-)
-async uploadSystemTool(
-  @UploadedFile() file: Express.Multer.File,
-): Promise<ResponseDataDto> {
-  const workbook = XLSX.read(file.buffer, { type: 'buffer' });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<SystemToolDto>(sheet);
-  return this.systemToolService.uploadSystemTools(rows); // <-- updated method
-}*/
+  //Upload certificates
   @Post('upload')
   async uploadCertificate(
     @Body() data: CertificateDto[],

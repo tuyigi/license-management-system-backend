@@ -5,16 +5,19 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DepartmentEntity } from '../../departments/entities/department.entity';
-import { Raw, Repository } from 'typeorm';
+import { Between, Raw, Repository } from 'typeorm';
 import { CertificateEntity } from '../entities/certificate.entity';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { CertificateDto } from '../dtos/certificate.dto';
 import { CertificateReportDto } from '../dtos/certificate-report.dto';
 import { User } from '../../users/entities/user.entity';
 import { CertificateReportEntity } from '../entities/certificate-report.entity';
+import { MailService } from '../../mail/mail.service';
+
 @Injectable()
 export class CertificatesService {
   constructor(
+    private readonly mailService: MailService,
     @InjectRepository(DepartmentEntity)
     private readonly departmentRepository: Repository<DepartmentEntity>,
     @InjectRepository(CertificateEntity)
@@ -316,5 +319,46 @@ export class CertificatesService {
       count: expiringSoon.length || 0,
       items: expiringSoon || [],
     };
+  }
+
+  //Fetch data for cron job
+  async getCertificateDataForCronJob() {
+    const certificatesData = await this.certificateRepository
+      .createQueryBuilder('certificates')
+      .leftJoinAndSelect('certificates.department_id', 'department')
+      .where('certificates.expiry_date::date - CURRENT_DATE = 15')
+      .select([
+        'certificates.id',
+        'certificates.certificate',
+        'certificates.expiry_date',
+        'department.id',
+        'department.department_email',
+      ])
+      .getMany();
+    await Promise.all(
+      certificatesData.map(async (certificateEntity) => {
+        const departmentID = certificateEntity.department_id?.id;
+
+        if (!departmentID) return;
+
+        const department = await this.departmentRepository.findOne({
+          where: { id: departmentID },
+          select: ['department_email'],
+        });
+
+        const certificate = certificateEntity.certificate;
+        const endDate = certificateEntity.expiry_date;
+        const departmentEmail = department?.department_email;
+        console.log({ certificate, endDate, departmentEmail });
+
+        if (departmentEmail) {
+          await this.mailService.sendCertificatesReminderEmail(
+            departmentEmail,
+            certificate,
+            endDate.toString(),
+          );
+        }
+      }),
+    );
   }
 }

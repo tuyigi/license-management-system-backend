@@ -31,10 +31,11 @@ import { MailModule } from '../mail/mail.module';
       User,
       ContractSystemToolMetricEntity,
       ComponentMetricEntity,
-      MetricEntity
+      MetricEntity,
     ]),
   ],
   providers: [ContractService],
   controllers: [ContractController],
+  exports: [ContractService],
 })
 export class ContractModule {}

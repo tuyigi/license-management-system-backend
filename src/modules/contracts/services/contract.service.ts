@@ -260,20 +260,6 @@ export class ContractService {
         approvalDto.comment,
       );
       return contract;
-
-      /*      if (status == 'REJECTED' || status == 'APPROVED') {
-        await this.mailService.sendFeedbackEmail(
-          email,
-          status,
-          contract_no,
-          approvalDto.comment,
-        );
-      }*/
-      /*     return new ResponseDataDto(
-        contract,
-        200,
-        'Contract status changed successfully',
-      );*/
     } catch (e) {
       throw new BadRequestException(`${e.message()}`);
     }
@@ -782,7 +768,6 @@ Get All Contracts Tool Metrics by department
     if (!department) {
       throw new NotFoundException(`Department with ID: ${id} not found`);
     }
-
     const expiringSoon = await this.contractRepository.find({
       where: {
         department: { id: department.id },
@@ -795,10 +780,42 @@ Get All Contracts Tool Metrics by department
         department: true,
       },
     });
-
     return {
       count: expiringSoon.length || 0,
       items: expiringSoon || [],
     };
+  }
+  //Fetch data for cron job
+  async getContractDataForCronJob() {
+    const contractsData = await this.contractRepository
+      .createQueryBuilder('contract')
+      .leftJoinAndSelect('contract.department', 'department')
+      .where('contract.end_date::date - CURRENT_DATE = 15')
+      .getMany();
+    await Promise.all(
+      contractsData.map(async (contract) => {
+        const departmentID = contract.department?.id;
+
+        if (!departmentID) return;
+
+        const department = await this.departmentEntityRepository.findOne({
+          where: { id: departmentID },
+          select: ['department_email'],
+        });
+
+        const contractNumber = contract.contract_number;
+        const endDate = contract.end_date;
+        const departmentEmail = department?.department_email;
+        console.log({ contractNumber, endDate, departmentEmail });
+
+        if (departmentEmail) {
+          await this.mailService.sendContractReminderEmail(
+            departmentEmail,
+            contractNumber,
+            endDate.toString(),
+          );
+        }
+      }),
+    );
   }
 }
