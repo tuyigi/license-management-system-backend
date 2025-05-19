@@ -745,7 +745,7 @@ Get All Contracts Tool Metrics by department
           select cstm.entitlement,cstm.utilisation,cstm.license_gap,cstm.comment,st.system_tool_name,st.department from system_tools st 
               full join contract_system_tools cst on st.id = cst.system_tool
             full join contract_system_tool_metric cstm on cst.id = cstm.contract_system_tool
-          where cstm.entitlement is not null and st.department = $1`;
+          where cstm.entitlement != 0 and st.department = $1`;
       const resultTools = await this.contractToolRepository.query(rawQuery, [
         id,
       ]);
