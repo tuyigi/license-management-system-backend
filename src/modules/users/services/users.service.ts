@@ -40,7 +40,6 @@ export class UsersService {
   * */
 
   async create(registerUserDto: RegisterUserDto): Promise<ResponseDataDto> {
-    console.info('User Registration Data:', registerUserDto);
     const baseUrl = this.configService.get<string>(
       'LDAP_VALIDATE_ACCOUNT_URL_TEST',
     );

@@ -16,6 +16,9 @@ import { SystemFunctionsModule } from './modules/system-functions/system-functio
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { CertificatesModule } from './modules/certificates/certificates.module';
 import { MetricModule } from './modules/metric/metric.module';
+import { MailModule } from './modules/mail/mail.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ReminderService } from './modules/util/reminder.service';
 
 @Module({
   imports: [
@@ -46,8 +49,10 @@ import { MetricModule } from './modules/metric/metric.module';
     SystemFunctionsModule,
     DepartmentsModule,
     CertificatesModule,
+    MailModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
-  providers: [],
+  providers: [ReminderService],
 })
 export class AppModule {}

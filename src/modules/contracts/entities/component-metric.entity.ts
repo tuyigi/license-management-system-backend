@@ -33,4 +33,6 @@ export class ComponentMetricEntity extends BaseEntity {
   created_at: Date;
   @UpdateDateColumn()
   updated_at: Date;
+  @Column({ nullable: true, type: 'text' })
+  system_tool_name: string;
 }

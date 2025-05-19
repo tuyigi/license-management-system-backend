@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Vendor } from '../../vendors/entities/vendor.entity';
-import { Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import { Contract } from '../entities/contract.entity';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { ContractDto } from '../dtos/contract.dto';
@@ -26,10 +26,12 @@ import { ContractSystemToolMetricEntity } from '../entities/contract-system-tool
 import { ComponentMetricEntity } from '../entities/component-metric.entity';
 import { MetricEntity } from '../../metric/entities/metric.entity';
 import { AuditMetricDto } from '../dtos/tool-metric.dto';
+import { MailService } from '../../mail/mail.service';
 
 @Injectable()
 export class ContractService {
   constructor(
+    private readonly mailService: MailService,
     @InjectRepository(Vendor)
     private readonly vendorRepository: Repository<Vendor>,
     @InjectRepository(Contract)
@@ -53,6 +55,8 @@ export class ContractService {
     private readonly componentMetricRepository: Repository<ComponentMetricEntity>,
     @InjectRepository(MetricEntity)
     private readonly metricRepository: Repository<MetricEntity>,
+    @InjectRepository(DepartmentEntity)
+    private readonly departmentEntityRepository: Repository<DepartmentEntity>,
   ) {}
 
   /*
@@ -105,23 +109,6 @@ export class ContractService {
         ? contractDto.contract_number
         : contractNumber;
       const savedContract = await this.contractRepository.save(contract);
-
-      // start add system to contract
-      // for (const systemId of contractDto.system_tools) {
-      //   const systemTool: SystemTool = await this.systemToolRepository.findOne({
-      //     where: { id: systemId },
-      //   });
-      //   if (systemTool) {
-      //     const contractTool: ContractSystemToolEntity =
-      //       new ContractSystemToolEntity();
-      //     contractTool.system_tool = systemTool;
-      //     contractTool.contract = savedContract;
-      //     await this.contractToolRepository.save(contractTool);
-      //   }
-      // }
-      // end system to contract
-
-      // generate payment batches of contract
       await this.paymentService.generateBatches(savedContract.id);
       return new ResponseDataDto(
         savedContract,
@@ -214,9 +201,9 @@ export class ContractService {
    */
   async getContractDepartment(id: number): Promise<ResponseDataDto> {
     try {
-      const contract = await this.contractRepository.findOne({ where: { id } });
+      /*  const contract = await this.contractRepository.findOne({ where: { id } });
       if (!contract)
-        throw new NotFoundException(`Contract with ID: ${id} not found`);
+        throw new NotFoundException(`Contract with ID: ${id} not found`);*/
       const contracts = await this.contractRepository.find({
         where: { department: { id } },
         relations: {
@@ -240,21 +227,39 @@ export class ContractService {
     id: number,
     status: ApprovalStatusEnum,
     approvalDto: ApprovalDto,
-  ): Promise<ResponseDataDto> {
+  ) {
     try {
       const contract: Contract = await this.contractRepository.findOne({
         where: { id },
+      });
+      const contractNumber: Contract = await this.contractRepository.findOne({
+        where: { id },
+        select: ['contract_number'],
+      });
+      const contractDepartment: Contract =
+        await this.contractRepository.findOne({
+          where: { id },
+          select: ['department'],
+        });
+      const contractDepartmentId = contractDepartment?.department?.id;
+      const departmentEmail = await this.departmentEntityRepository.findOne({
+        where: { id: contractDepartmentId },
+        select: ['department_email'],
       });
       if (!contract)
         throw new NotFoundException(`Contract with ID: ${id} not found`);
       contract.approval_status = status;
       contract.approval_comment = approvalDto.comment;
       await this.contractRepository.save(contract);
-      return new ResponseDataDto(
-        contract,
-        200,
-        'Contract status changed successfully',
+      const email = departmentEmail?.department_email;
+      const contract_no = contractNumber?.contract_number;
+      await this.mailService.sendFeedbackEmail(
+        email,
+        status,
+        contract_no,
+        approvalDto.comment,
       );
+      return contract;
     } catch (e) {
       throw new BadRequestException(`${e.message()}`);
     }
@@ -292,13 +297,13 @@ export class ContractService {
         if (notFoundCount > 0)
           throw new BadRequestException('Metric not found');
       }
-
       component.contract = contract;
       component.description = componentDto.description;
       component.start_date = new Date(`${componentDto.start_date}`);
       component.expiry_date = new Date(`${componentDto.expiry_date}`);
       component.host_server = componentDto.host_server || null;
       component.name = componentDto.name;
+      component.system_tool_name = componentDto.system_tool_name;
       const saved = await this.componentRepository.save(component);
 
       // save contract metric tool details
@@ -306,6 +311,7 @@ export class ContractService {
         const toolMetric = new ComponentMetricEntity();
         toolMetric.metric = metric;
         toolMetric.component = saved;
+        toolMetric.system_tool_name = componentDto.system_tool_name;
         await this.componentMetricRepository.save(toolMetric);
       }
       return new ResponseDataDto(saved, 201, `Component added successfully`);
@@ -495,7 +501,7 @@ export class ContractService {
       const resultTools = await this.contractToolRepository.query(rawQuery, [
         id,
       ]);
-      const rawQueryComponents = `select c.id,c.name,c.description,c.start_date,c.expiry_date,c.created_at,c.updated_at,c.contract,c.host_server, cm.id as component_metric_id, cm.entitlement,cm.utilisation,cm.license_gap,cm.created_at,cm.updated_at,cm.component,cm.metric,cm.comment,m.id as metric_id,m.name as metric_name,m.created_at,m.updated_at  from components c left join component_metric cm on c.id=cm.component left join metrics m on cm.metric=m.id where c.contract= $1`;
+      const rawQueryComponents = `select c.id,c.name,c.description,c.start_date,c.expiry_date,c.created_at,c.updated_at,c.contract,c.host_server,c.system_tool_name, cm.id as component_metric_id, cm.entitlement,cm.utilisation,cm.license_gap,cm.created_at,cm.updated_at,cm.component,cm.metric,cm.comment,m.id as metric_id,m.name as metric_name,m.created_at,m.updated_at  from components c left join component_metric cm on c.id=cm.component left join metrics m on cm.metric=m.id where c.contract= $1`;
       const resultComponents = await this.contractToolRepository.query(
         rawQueryComponents,
         [id],
@@ -662,5 +668,155 @@ export class ContractService {
     } catch (e) {
       throw e;
     }
+  }
+
+  /*
+  Uploading License Contracts
+  */
+  async uploadContract(contractDto: ContractDto[]): Promise<ResponseDataDto> {
+    const SavedContractsArray = [];
+    try {
+      for (const dto of contractDto) {
+        const vendor: Vendor = await this.vendorRepository.findOne({
+          where: { id: dto.vendor },
+        });
+        if (!vendor)
+          throw new NotFoundException(
+            `Vendor with ID: ${dto.vendor} doesn't exist`,
+          );
+        const department: DepartmentEntity =
+          await this.departmentRepository.findOne({
+            where: {
+              id: dto.department,
+            },
+          });
+        if (!department)
+          throw new NotFoundException(
+            `Department with ID: ${dto.department} doesn't exist`,
+          );
+
+        if (
+          new Date(`${dto.start_date}`).getMilliseconds() >
+          new Date(`${dto.end_date}`).getMilliseconds()
+        )
+          throw new BadRequestException(
+            `End date should be greater than start date`,
+          );
+        const contract: Contract = new Contract();
+        // Generate Contract Number
+        const counter: number = await this.contractRepository.countBy({
+          department: { id: dto.department },
+          vendor: { id: dto.vendor },
+        });
+        const contractNumber = `BNR/${dto.department}/${vendor.vendor_name}/${counter}`;
+        contract.start_date = new Date(Date.parse(`${dto.start_date}`));
+        contract.end_date = new Date(Date.parse(`${dto.end_date}`));
+        contract.annual_license_fees = dto.annual_license_fees;
+        contract.currency = dto.currency;
+        contract.vendor = vendor;
+        contract.department = department;
+        contract.description = dto.description;
+        contract.document_link = dto.document_link;
+        contract.number_system_users = dto.number_system_users;
+        contract.contract_number = dto.contract_number
+          ? dto.contract_number
+          : contractNumber;
+        const savedContract = await this.contractRepository.save(contract);
+        SavedContractsArray.push(savedContract);
+        await this.paymentService.generateBatches(savedContract.id);
+      }
+      return new ResponseDataDto(
+        SavedContractsArray,
+        201,
+        `Contracts uploaded successfully`,
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  /*
+Get All Contracts Tool Metrics by department
+ */
+
+  async getContractsToolsDepartment(id: number): Promise<ResponseDataDto> {
+    try {
+      const rawQuery = `
+          select cstm.entitlement,cstm.utilisation,cstm.license_gap,cstm.comment,st.system_tool_name,st.department from system_tools st 
+              full join contract_system_tools cst on st.id = cst.system_tool
+            full join contract_system_tool_metric cstm on cst.id = cstm.contract_system_tool
+          where cstm.entitlement != 0 and st.department = $1`;
+      const resultTools = await this.contractToolRepository.query(rawQuery, [
+        id,
+      ]);
+
+      const response = {
+        toolsMetrics: resultTools,
+      };
+      return new ResponseDataDto(response);
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  //Contracts Expiration Reminders By department
+  async getContractsRemindersByDepartment(id: number) {
+    const department: DepartmentEntity =
+      await this.departmentRepository.findOne({
+        where: { id },
+      });
+
+    if (!department) {
+      throw new NotFoundException(`Department with ID: ${id} not found`);
+    }
+    const expiringSoon = await this.contractRepository.find({
+      where: {
+        department: { id: department.id },
+        end_date: Raw(
+          (alias) =>
+            `DATE(${alias}) BETWEEN CURRENT_DATE + INTERVAL '1 day' AND CURRENT_DATE + INTERVAL '15 days'`,
+        ),
+      },
+      relations: {
+        department: true,
+      },
+    });
+    return {
+      count: expiringSoon.length || 0,
+      items: expiringSoon || [],
+    };
+  }
+  //Fetch data for cron job
+  async getContractDataForCronJob() {
+    const contractsData = await this.contractRepository
+      .createQueryBuilder('contract')
+      .leftJoinAndSelect('contract.department', 'department')
+      .where('contract.end_date::date - CURRENT_DATE = 15')
+      .getMany();
+    await Promise.all(
+      contractsData.map(async (contract) => {
+        const departmentID = contract.department?.id;
+
+        if (!departmentID) return;
+
+        const department = await this.departmentEntityRepository.findOne({
+          where: { id: departmentID },
+          select: ['department_email'],
+        });
+
+        const contractNumber = contract.contract_number;
+        const endDate = contract.end_date;
+        const departmentEmail = department?.department_email;
+        console.log({ contractNumber, endDate, departmentEmail });
+
+        if (departmentEmail) {
+          await this.mailService.sendContractReminderEmail(
+            departmentEmail,
+            contractNumber,
+            endDate.toString(),
+          );
+        }
+      }),
+    );
   }
 }

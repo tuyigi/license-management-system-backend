@@ -19,4 +19,6 @@ export class ComponentDto {
   metrics: number[];
   @IsOptional()
   host_server: string;
+  @IsOptional()
+  system_tool_name: string;
 }

@@ -16,6 +16,8 @@ export class ContractDto {
   department: number;
   @IsArray({ message: 'System tools should be valid' })
   system_tools: number[];
+  // @IsNumber()
+  // system_tools: number;
   @IsOptional()
   contract_number: string;
   @IsNumber()

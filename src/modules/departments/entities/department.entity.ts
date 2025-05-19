@@ -18,4 +18,6 @@ export class DepartmentEntity {
   created_at: Date;
   @UpdateDateColumn()
   updated_at: Date;
+  @Column({ nullable: true })
+  department_email: string;
 }

@@ -6,4 +6,6 @@ export class DepartmentDto {
   name: string;
   @IsOptional()
   description: string;
+  @IsOptional()
+  department_email: string;
 }

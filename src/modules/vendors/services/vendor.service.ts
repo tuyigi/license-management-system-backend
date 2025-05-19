@@ -98,4 +98,35 @@ export class VendorService {
     });
     return new ResponseDataDto(vendors, 200, `vendors fetched successfully`);
   }
+
+  /*
+Upload new Vendor
+*/
+
+  async uploadVendor(
+    recordVendorDto: RecordVendorDto[],
+  ): Promise<ResponseDataDto> {
+    const savedVendors = [];
+    try {
+      for (const dto of recordVendorDto) {
+        let vendor: Vendor = await this.vendorRepository.findOne({
+          where: { vendor_name: dto.name },
+        });
+        if (vendor) throw new ConflictException(`vendor with ${dto.name}`);
+        vendor = new Vendor();
+        vendor.vendor_name = dto.name;
+        vendor.vendor_website = dto.website;
+        vendor.description = dto.description;
+        const savedVendor: Vendor = await this.vendorRepository.save(vendor);
+        savedVendors.push(savedVendor);
+      }
+      return new ResponseDataDto(
+        savedVendors,
+        201,
+        'vendor has been recorded successfully!',
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
 }
