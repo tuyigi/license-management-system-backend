@@ -30,4 +30,6 @@ export class ComponentEntity {
   created_at: Date;
   @UpdateDateColumn()
   updated_at: Date;
+  @Column()
+  system_tool_name: string;
 }

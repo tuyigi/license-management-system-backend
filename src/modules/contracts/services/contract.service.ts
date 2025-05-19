@@ -297,13 +297,13 @@ export class ContractService {
         if (notFoundCount > 0)
           throw new BadRequestException('Metric not found');
       }
-
       component.contract = contract;
       component.description = componentDto.description;
       component.start_date = new Date(`${componentDto.start_date}`);
       component.expiry_date = new Date(`${componentDto.expiry_date}`);
       component.host_server = componentDto.host_server || null;
       component.name = componentDto.name;
+      component.system_tool_name = componentDto.system_tool_name;
       const saved = await this.componentRepository.save(component);
 
       // save contract metric tool details
@@ -311,6 +311,7 @@ export class ContractService {
         const toolMetric = new ComponentMetricEntity();
         toolMetric.metric = metric;
         toolMetric.component = saved;
+        toolMetric.system_tool_name = componentDto.system_tool_name;
         await this.componentMetricRepository.save(toolMetric);
       }
       return new ResponseDataDto(saved, 201, `Component added successfully`);
@@ -500,7 +501,7 @@ export class ContractService {
       const resultTools = await this.contractToolRepository.query(rawQuery, [
         id,
       ]);
-      const rawQueryComponents = `select c.id,c.name,c.description,c.start_date,c.expiry_date,c.created_at,c.updated_at,c.contract,c.host_server, cm.id as component_metric_id, cm.entitlement,cm.utilisation,cm.license_gap,cm.created_at,cm.updated_at,cm.component,cm.metric,cm.comment,m.id as metric_id,m.name as metric_name,m.created_at,m.updated_at  from components c left join component_metric cm on c.id=cm.component left join metrics m on cm.metric=m.id where c.contract= $1`;
+      const rawQueryComponents = `select c.id,c.name,c.description,c.start_date,c.expiry_date,c.created_at,c.updated_at,c.contract,c.host_server,c.system_tool_name, cm.id as component_metric_id, cm.entitlement,cm.utilisation,cm.license_gap,cm.created_at,cm.updated_at,cm.component,cm.metric,cm.comment,m.id as metric_id,m.name as metric_name,m.created_at,m.updated_at  from components c left join component_metric cm on c.id=cm.component left join metrics m on cm.metric=m.id where c.contract= $1`;
       const resultComponents = await this.contractToolRepository.query(
         rawQueryComponents,
         [id],
