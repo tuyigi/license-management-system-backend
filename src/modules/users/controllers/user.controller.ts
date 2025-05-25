@@ -1,12 +1,23 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { RegisterUserDto } from '../dtos/register-user.dto';
 import { sendEmailV2 } from '../../../common/utils/communication.utils';
 import { ChangePasswordDto } from '../dtos/change-password.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
+import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 @UseGuards(new JwtAuthGuard())
 @Controller('user')
+@ApiBearerAuth('access-token')
 export class UserController {
   constructor(private readonly userService: UsersService) {}
 
@@ -22,16 +33,17 @@ export class UserController {
 
   /*
   Send Email
-   */
+*/
   @Post('send')
   async sendEmail(): Promise<boolean> {
     return sendEmailV2();
   }
 
   /*
-  Create new organization user
-   */
+    Create new organization user
+  */
   @Post()
+  @ApiBody({ type: RegisterUserDto })
   async createUser(
     @Body() registerUserDto: RegisterUserDto,
   ): Promise<ResponseDataDto> {
@@ -39,18 +51,19 @@ export class UserController {
   }
 
   /*
-  Get User by ID
-   */
+    Get User by ID
+  */
   @Get('/:id')
+  @ApiParam({ name: 'id', type: Number })
   async getUserById(@Param('id') id: number): Promise<ResponseDataDto> {
     return this.userService.getOneUser(id);
   }
 
   /*
-  Get user by Username
-   */
-
+    Get user by Username
+  */
   @Get('/username/:username')
+  @ApiParam({ name: 'username', type: String })
   async getUserByUsername(
     @Param('username') username: string,
   ): Promise<ResponseDataDto> {
@@ -58,9 +71,10 @@ export class UserController {
   }
 
   /*
-  Get Organization users by organization ID
-   */
+    Get Organization users by organization ID
+  */
   @Get('/organization/:id')
+  @ApiParam({ name: 'id', type: Number })
   async getOrganizationUsers(
     @Param('id') id: number,
   ): Promise<ResponseDataDto> {
@@ -68,8 +82,8 @@ export class UserController {
   }
 
   /*
-  Get All Users
-   */
+    Get All Users
+  */
   @Get()
   async getUsers(): Promise<ResponseDataDto> {
     return this.userService.getUsers();

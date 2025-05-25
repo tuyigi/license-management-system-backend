@@ -1,18 +1,29 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { SystemFunctionsService } from '../services/system-functions.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { SystemFunctionsDto } from '../dtos/system-functions.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
+import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('systemFunction')
+@ApiBearerAuth('access-token')
 export class SystemFunctionsController {
   constructor(private readonly systemFunctionService: SystemFunctionsService) {}
 
   /*
-  Create System Functions
-   */
+    Create System Functions
+  */
   @Post()
+  @ApiBody({ type: SystemFunctionsDto })
   async createSystemFunction(
     @Body() systemFunctionDto: SystemFunctionsDto,
   ): Promise<ResponseDataDto> {
@@ -20,9 +31,11 @@ export class SystemFunctionsController {
   }
 
   /*
-  Update System Function
-   */
+    Update System Function
+  */
   @Put('/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: SystemFunctionsDto })
   async updateSystemFunction(
     @Param('id') id: number,
     @Body() systemFunctionDto: SystemFunctionsDto,
@@ -34,18 +47,19 @@ export class SystemFunctionsController {
   }
 
   /*
-  Get System Functions
-   */
+    Get System Functions
+  */
   @Get()
   async getSystemFunctions(): Promise<ResponseDataDto> {
     return this.systemFunctionService.getSystemFunctions();
   }
 
   /*
-  Assign functions to system / tool
-   */
-
+    Assign functions to system / tool
+  */
   @Put('/assign/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: [Number] })
   async assignSystemTool(
     @Param('id') id: number,
     @Body() functions: number[],
@@ -54,10 +68,10 @@ export class SystemFunctionsController {
   }
 
   /*
-  Check similar functions with system/tool
-   */
-
+    Check similar functions with system/tool
+  */
   @Put('/check/functions')
+  @ApiBody({ type: [Number] })
   async checkSimilarFunctionSystem(
     @Body() functions: number[],
   ): Promise<ResponseDataDto> {

@@ -5,7 +5,6 @@ import {
   Param,
   Post,
   Put,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ContractService } from '../services/contract.service';
@@ -18,16 +17,16 @@ import { ContractToolDto } from '../dtos/contract-tool.dto';
 import { ReminderDto } from '../dtos/reminder.dto';
 import { ApprovalDto } from '../enums/approval.dto';
 import { AuditMetricDto } from '../dtos/tool-metric.dto';
+import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 
-@UseGuards(new JwtAuthGuard())
+@UseGuards(JwtAuthGuard)
 @Controller('contract')
+@ApiBearerAuth('access-token')
 export class ContractController {
   constructor(private readonly contractService: ContractService) {}
 
-  /*
-  create new contract
-   */
   @Post()
+  @ApiBody({ type: ContractDto })
   async createContract(
     @Body() contractDto: ContractDto,
   ): Promise<ResponseDataDto> {
@@ -38,6 +37,8 @@ export class ContractController {
   Update contract
    */
   @Put('/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: ContractDto })
   async updateContract(
     @Param('id') id: number,
     @Body() contractDto: ContractDto,
@@ -46,26 +47,12 @@ export class ContractController {
   }
 
   /*
-  Get contracts
-   */
-  @Get()
-  async getContracts(): Promise<ResponseDataDto> {
-    return this.contractService.getContracts();
-  }
-  /*
-  Generate payment batches of a contract 
-   */
-  // @Get('payment/:id')
-  // async generatePaymentBatches(
-  //   @Param('id') id: number,
-  // ): Promise<ResponseDataDto> {
-  //   return this.contractService.generateBatches(id);
-  // }
-
-  /*
   Update Approval Status
    */
   @Put('/approvalStatus/:id/:status')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiParam({ name: 'status', enum: ApprovalStatusEnum })
+  @ApiBody({ type: ApprovalDto })
   async updateApprovalStatus(
     @Param('id') id: number,
     @Param('status') status: ApprovalStatusEnum,
@@ -82,7 +69,8 @@ export class ContractController {
   /*
   Add Contract Components
    */
-  @Post(`component`)
+  @Post('component')
+  @ApiBody({ type: ComponentDto })
   async createComponent(
     @Body() componentDto: ComponentDto,
   ): Promise<ResponseDataDto> {
@@ -92,7 +80,8 @@ export class ContractController {
   /*
   Get Contract Components
    */
-  @Get(`component/:id`)
+  @Get('component/:id')
+  @ApiParam({ name: 'id', type: Number })
   async getContractComponent(
     @Param('id') id: number,
   ): Promise<ResponseDataDto> {
@@ -102,7 +91,8 @@ export class ContractController {
   /*
   Get contract by department
    */
-  @Get(`department/:id`)
+  @Get('department/:id')
+  @ApiParam({ name: 'id', type: Number })
   async getContractDepartment(
     @Param('id') id: number,
   ): Promise<ResponseDataDto> {
@@ -110,9 +100,12 @@ export class ContractController {
   }
 
   /*
-  add system tool to contract 
- */
-  @Put(`addSystemTool/:contractId/:systemId`)
+  add system tool to contract
+   */
+  @Put('addSystemTool/:contractId/:systemId')
+  @ApiParam({ name: 'contractId', type: Number })
+  @ApiParam({ name: 'systemId', type: Number })
+  @ApiBody({ type: ContractToolDto })
   async addSystemToContract(
     @Param('contractId') contractId: number,
     @Param('systemId') systemId: number,
@@ -126,9 +119,11 @@ export class ContractController {
   }
 
   /*
-  remove system tool on contract 
+  remove system tool on contract
   */
-  @Put(`removeSystemTool/:contractId/:systemId`)
+  @Put('removeSystemTool/:contractId/:systemId')
+  @ApiParam({ name: 'contractId', type: Number })
+  @ApiParam({ name: 'systemId', type: Number })
   async removeSystemOnContract(
     @Param('contractId') contractId: number,
     @Param('systemId') systemId: number,
@@ -140,6 +135,7 @@ export class ContractController {
   Get Contract system tool
    */
   @Get('systemTool/:contractId')
+  @ApiParam({ name: 'contractId', type: Number })
   async getContractTools(
     @Param('contractId') contractId: number,
   ): Promise<ResponseDataDto> {
@@ -150,6 +146,7 @@ export class ContractController {
   Get contract details
    */
   @Get('/:id')
+  @ApiParam({ name: 'id', type: Number })
   async getContractDetails(@Param('id') id: number): Promise<ResponseDataDto> {
     return this.contractService.getContractDetails(id);
   }
@@ -158,6 +155,8 @@ export class ContractController {
   Add reminder
    */
   @Put('reminder/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: ReminderDto })
   async addReminder(
     @Body() reminderDto: ReminderDto,
     @Param('id') contractId: number,
@@ -169,6 +168,7 @@ export class ContractController {
   Remove reminder
    */
   @Put('reminder/:id')
+  @ApiParam({ name: 'id', type: Number })
   async removeReminder(
     @Param('id') reminderId: number,
   ): Promise<ResponseDataDto> {
@@ -176,25 +176,11 @@ export class ContractController {
   }
 
   /*
-  Get tool metric
-   */
-  @Get('metric/tool/:id')
-  async getMetricTool(@Param('id') id: number): Promise<ResponseDataDto> {
-    return this.contractService.getMetricTool(id);
-  }
-
-  /*
-  Get component metric
-   */
-  @Get('metric/component/:id')
-  async getComponentTool(@Param('id') id: number): Promise<ResponseDataDto> {
-    return this.contractService.getMetricComponent(id);
-  }
-
-  /*
   Add audit metric for tool
    */
   @Put('metric/tool/audit/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: AuditMetricDto })
   async addAuditMetricTool(
     @Param('id') id: number,
     @Body() toolMetricDto: AuditMetricDto,
@@ -206,6 +192,8 @@ export class ContractController {
   Add audit metric for component
    */
   @Put('metric/component/audit/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: AuditMetricDto })
   async addAuditMetricComponent(
     @Param('id') id: number,
     @Body() componentMetricDto: AuditMetricDto,
@@ -217,15 +205,18 @@ export class ContractController {
   Upload Contracts
    */
   @Post('upload')
+  @ApiBody({ type: [ContractDto] })
   async uploadLicenseContract(
     @Body() data: ContractDto[],
   ): Promise<ResponseDataDto> {
     return this.contractService.uploadContract(data);
   }
+
   /*
   Get All Contracts System Tool Metrics by Department
    */
-  @Get(`tool/metric/department/:id`)
+  @Get('tool/metric/department/:id')
+  @ApiParam({ name: 'id', type: Number })
   async getContractSystemToolMetrics(
     @Param('id') id: number,
   ): Promise<ResponseDataDto> {
@@ -233,9 +224,10 @@ export class ContractController {
   }
 
   /*
-   Contracts Expiration Reminders By department
+  Contracts Expiration Reminders By department
    */
-  @Get(`reminders/department/:id`)
+  @Get('reminders/department/:id')
+  @ApiParam({ name: 'id', type: Number })
   async getContractsRemindersByDepartment(@Param('id') id: number) {
     return this.contractService.getContractsRemindersByDepartment(id);
   }

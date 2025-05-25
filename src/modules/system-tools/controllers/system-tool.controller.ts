@@ -5,27 +5,25 @@ import {
   Param,
   Post,
   Put,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { SystemToolService } from '../services/system-tool.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { SystemToolDto } from '../dtos/system-tool.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
-import { FileInterceptor } from '@nestjs/platform-express';
-import * as XLSX from 'xlsx';
-import { memoryStorage } from 'multer';
+import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('systemTool')
+@ApiBearerAuth('access-token')
 export class SystemToolController {
   constructor(private readonly systemToolService: SystemToolService) {}
 
   /*
-  Add new system tool
-   */
+    Add new system tool
+  */
   @Post()
+  @ApiBody({ type: SystemToolDto })
   async addNewSystemTool(
     @Body() systemToolDto: SystemToolDto,
   ): Promise<ResponseDataDto> {
@@ -33,34 +31,46 @@ export class SystemToolController {
   }
 
   /*
-  update system tool details
-   */
-
+    update system tool details
+  */
   @Put('/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: SystemToolDto })
   async updateSystemTool(
     @Param('id') id: number,
-    @Body()
-    systemToolDto: SystemToolDto,
+    @Body() systemToolDto: SystemToolDto,
   ): Promise<ResponseDataDto> {
     return this.systemToolService.updateSystemTool(id, systemToolDto);
   }
 
   /*
-  Get System tools
-   */
+    Get System tools
+  */
   @Get()
   async getSystemTools(): Promise<ResponseDataDto> {
     return this.systemToolService.getSystemTools();
   }
 
   /*
-  Get system tool of specific department
-   */
+    Get system tool of specific department
+  */
   @Get('department/:departmentId')
+  @ApiParam({ name: 'departmentId', type: Number })
   async getToolDepartment(
     @Param('departmentId') departmentId: number,
   ): Promise<ResponseDataDto> {
     return this.systemToolService.getToolDepartment(departmentId);
+  }
+
+  /*
+    Upload System Tools
+  */
+  @Post('upload')
+  @ApiBody({ type: [SystemToolDto] })
+  async uploadSystemTool(
+    @Body() data: SystemToolDto[],
+  ): Promise<ResponseDataDto> {
+    return this.systemToolService.uploadSystemTools(data);
   }
 
   /*  @Post('upload')
@@ -77,10 +87,4 @@ export class SystemToolController {
     const rows = XLSX.utils.sheet_to_json<SystemToolDto>(sheet);
     return this.systemToolService.uploadSystemTools(rows); // <-- updated method
   }*/
-  @Post('upload')
-  async uploadSystemTool(
-    @Body() data: SystemToolDto[],
-  ): Promise<ResponseDataDto> {
-    return this.systemToolService.uploadSystemTools(data);
-  }
 }

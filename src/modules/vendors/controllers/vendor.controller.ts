@@ -12,15 +12,18 @@ import { RecordVendorDto } from '../dtos/recordVendor.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { ChangeVendorStatusDto } from '../dtos/changeVendorStatus.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
+import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 @UseGuards(new JwtAuthGuard())
 @Controller('vendor')
+@ApiBearerAuth('access-token')
 export class VendorController {
   constructor(private readonly vendorService: VendorService) {}
 
   /*
-  Record vendor
-   */
+    Record vendor
+  */
   @Post()
+  @ApiBody({ type: RecordVendorDto })
   async recordVendor(
     @Body() recordVendorDto: RecordVendorDto,
   ): Promise<ResponseDataDto> {
@@ -28,17 +31,19 @@ export class VendorController {
   }
 
   /*
-  Get vendors
-   */
+    Get vendors
+  */
   @Get()
   async getVendors(): Promise<ResponseDataDto> {
     return this.vendorService.getVendors();
   }
 
   /*
-  Update vendor
-   */
+    Update vendor
+  */
   @Put('/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: RecordVendorDto })
   async updateVendor(
     @Param('id') id: number,
     @Body() recordVendor: RecordVendorDto,
@@ -46,10 +51,12 @@ export class VendorController {
     return this.vendorService.updateVendor(id, recordVendor);
   }
 
-  /* 
-  Change vendor status
-   */
+  /*
+    Change vendor status
+  */
   @Put('/status/:id')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: ChangeVendorStatusDto })
   async changeVendorStatus(
     @Param('id') id: number,
     @Body() changeVendorStatusDto: ChangeVendorStatusDto,
@@ -58,9 +65,10 @@ export class VendorController {
   }
 
   /*
-Upload new Vendor
-*/
+    Upload new Vendor
+  */
   @Post('upload')
+  @ApiBody({ type: [RecordVendorDto] })
   async uploadVendor(
     @Body() data: RecordVendorDto[],
   ): Promise<ResponseDataDto> {

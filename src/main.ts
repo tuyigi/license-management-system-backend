@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from './common/validation/validation.pipe';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,6 +33,26 @@ async function bootstrap() {
     }
     next();
   });
+  // 🔹 Swagger Setup
+  const config = new DocumentBuilder()
+    .setTitle('License Management API')
+    .setDescription('API documentation for the License Management System')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'access-token',
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config, {
+    // AUTO SCHEMA
+    extraModels: [], // Optional: manually include extra models
+  });
+  SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(8000, '0.0.0.0');
 }
