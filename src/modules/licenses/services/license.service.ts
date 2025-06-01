@@ -10,7 +10,6 @@ import { Repository } from 'typeorm';
 import { CreateLicenceDto } from '../dtos/create_license.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { Vendor } from '../../vendors/entities/vendor.entity';
-import { LicenseCategory } from '../../../common/enums/license_category.enum';
 import { SystemTool } from '../../system-tools/entities/system-tool.entity';
 import { DepartmentEntity } from '../../departments/entities/department.entity';
 
@@ -157,5 +156,25 @@ export class LicenseService {
       200,
       `Licenses retrieved successfully`,
     );
+  }
+
+  /*
+Get Licenses by Department
+ */
+  async getLicenseDepartment(id: number): Promise<ResponseDataDto> {
+    try {
+      const licenses = await this.licenseRepository.find({
+        where: { department_id: { id } },
+        relations: {
+          vendor: true,
+          system_tool: true,
+          department_id: true,
+        },
+        order: { created_at: 'DESC' },
+      });
+      return new ResponseDataDto(licenses);
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
   }
 }

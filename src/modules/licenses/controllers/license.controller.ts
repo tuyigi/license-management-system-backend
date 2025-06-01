@@ -55,4 +55,14 @@ export class LicenseController {
   ) {
     return this.licenseService.updateLicense(id, updateLicenseDto);
   }
+
+  /*
+  Get Licenses by Department
+   */
+  @Get(`department/:id`)
+  async getLicenseDepartment(
+    @Param('id') id: number,
+  ): Promise<ResponseDataDto> {
+    return this.licenseService.getLicenseDepartment(id);
+  }
 }
