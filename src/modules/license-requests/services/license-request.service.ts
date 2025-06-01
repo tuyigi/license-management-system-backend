@@ -258,7 +258,7 @@ export class LicenseRequestService {
   Reject/approve license request
    */
 
-  async rejectOrApproveLicenseRequest(
+  /*  async rejectOrApproveLicenseRequest(
     id: number,
     rejectLicenseRequestDto: DecisionLicenseRequestDto,
   ): Promise<ResponseDataDto> {
@@ -299,7 +299,7 @@ export class LicenseRequestService {
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
     }
-  }
+  }*/
 
   /*
   reject license request
@@ -336,13 +336,13 @@ export class LicenseRequestService {
   Approve license request
    */
 
-  async approveLicenseRequest(
+  /*  async approveLicenseRequest(
     licenseRequest: LicenseRequest,
     user: User,
   ): Promise<ResponseDataDto> {
     try {
       // check user type if is license manager
-      if (user.user_type !== UserType.LICENSE_MANAGER)
+      if (user.user_type !== UserType.CONTRACT_MANAGER)
         throw new BadRequestException(
           `User ${user.first_name} ${user.last_name} with type ${user.user_type} is not allowed to approve license request`,
         );
@@ -436,7 +436,7 @@ export class LicenseRequestService {
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
     }
-  }
+  }*/
 
   /*
   Download Organization license by license request ID

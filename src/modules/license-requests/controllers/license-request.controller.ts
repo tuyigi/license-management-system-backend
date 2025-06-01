@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { LicenseRequestService } from '../services/license-request.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { RequestLicenseDto } from '../dtos/request-license.dto';
@@ -67,7 +76,7 @@ export class LicenseRequestController {
   /*
   Approve or reject license request ( Only license manager allowed)
    */
-  @Put('/decision/:id')
+  /*  @Put('/decision/:id')
   async approveOrRejectLicenseRequest(
     @Param('id') id: number,
     @Body() decisionLicenseRequestDto: DecisionLicenseRequestDto,
@@ -76,7 +85,7 @@ export class LicenseRequestController {
       id,
       decisionLicenseRequestDto,
     );
-  }
+  }*/
 
   /*
   Download organization license 

@@ -26,9 +26,6 @@ export class OrganizationLicense extends BaseEntity {
   )
   @JoinColumn({ name: 'organization_id' })
   organization_id: Organization;
-  @ManyToOne(() => License, (license) => license.organizations)
-  @JoinColumn({ name: 'license_id' })
-  license_id: License;
   @Column({ nullable: true })
   description: string;
   @Column({ enum: LicensePeriodEnum })

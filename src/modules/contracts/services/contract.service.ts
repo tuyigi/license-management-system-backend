@@ -215,8 +215,8 @@ export class ContractService {
   async getContractDepartment(id: number): Promise<ResponseDataDto> {
     try {
       const contract = await this.contractRepository.findOne({ where: { id } });
-      if (!contract)
-        throw new NotFoundException(`Contract with ID: ${id} not found`);
+      /*    if (!contract)
+        throw new NotFoundException(`Contract with ID: ${id} not found`);*/
       const contracts = await this.contractRepository.find({
         where: { department: { id } },
         relations: {
