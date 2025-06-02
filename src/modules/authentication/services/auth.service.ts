@@ -8,6 +8,7 @@ import { User } from '../../users/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtRefreshTokenStrategy } from '../strategy/jwt-refresh-token.strategy';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -20,8 +21,26 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
   ) {}
-  async signIn(username: string): Promise<ResponseDataDto> {
-    const user = await this.validateUser(username);
+  async signIn(signinDto: SigninDto): Promise<ResponseDataDto> {
+    const isAuthenticated = await this.checkDomainUser(
+      signinDto.username,
+      signinDto.password,
+    );
+    if (!isAuthenticated) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const username1 = signinDto.username;
+    const index = username1.lastIndexOf('\\'); // Find the last index of the backslash character
+
+    let username2: string;
+    if (index !== -1) {
+      // Extract the substring after the last backslash
+      username2 = username1.substring(index + 1);
+    } else {
+      // If no backslash is found, use the whole string as the username
+      username2 = username1;
+    }
+    const user = await this.validateUser(username2);
     if (!user) {
       throw new UnauthorizedException('Invalid username');
     }
@@ -50,5 +69,20 @@ export class AuthService {
       return result;
     }
     return null;
+  }
+
+  async checkDomainUser(username: string, password: string): Promise<any> {
+    const baseUrl = this.configService.get<string>(
+      'LDAP_AUTHENTICATE_URL_TEST',
+    );
+    try {
+      const response = await axios.post(baseUrl, { username, password });
+      console.log(response.data.authenticated);
+      // Check if authentication was successful (adjust based on API response)
+      return response.status === 200;
+    } catch (error) {
+      console.error('LDAP Authentication failed:', error.message);
+      throw new Error('Authentication failed');
+    }
   }
 }

@@ -109,15 +109,58 @@ export class LicenseService {
     updateLicenseDto: CreateLicenceDto,
   ): Promise<ResponseDataDto> {
     try {
-      const { code, name, description } = updateLicenseDto;
+      const {
+        code,
+        description,
+        name,
+        payment_frequency,
+        license_fees,
+        number_system_users,
+        currency,
+        start_date,
+        end_date,
+      } = updateLicenseDto;
       const license: License = await this.licenseRepository.findOne({
         where: { id },
       });
       if (!license)
         throw new NotFoundException(`License with id: ${id} not found`);
+      const vendor: Vendor = await this.vendorRepository.findOne({
+        where: { id: updateLicenseDto.vendor },
+      });
+      if (!vendor)
+        throw new NotFoundException(
+          `Vendor with ID: ${updateLicenseDto.vendor} doesn't exist`,
+        );
+      const department: DepartmentEntity =
+        await this.departmentRepository.findOne({
+          where: {
+            id: updateLicenseDto.department,
+          },
+        });
+      if (!department)
+        throw new NotFoundException(
+          `Department with ID: ${updateLicenseDto.department} doesn't exist`,
+        );
+      const system: SystemTool = await this.systemToolRepository.findOne({
+        where: { id: updateLicenseDto.system_tool },
+      });
+      if (!system)
+        throw new NotFoundException(
+          `System Tool with ID: ${updateLicenseDto.system_tool}`,
+        );
       license.name = name;
       license.code = code;
       license.description = description;
+      license.vendor = vendor;
+      license.department_id = department;
+      license.system_tool = system;
+      license.payment_frequency = payment_frequency;
+      license.license_fees = license_fees;
+      license.number_system_users = number_system_users;
+      license.currency = currency;
+      license.start_date = new Date(`${start_date}`);
+      license.end_date = new Date(`${end_date}`);
       const savedLicense = await this.licenseRepository.save(license);
       return new ResponseDataDto(
         savedLicense,
