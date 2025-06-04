@@ -11,6 +11,8 @@ import { LicenseService } from '../services/license.service';
 import { CreateLicenceDto } from '../dtos/create_license.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
+import { AuditMetricDto } from '../../contracts/dtos/tool-metric.dto';
+import { LicenseToolDto } from '../dtos/license_tool.dto';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('license')
@@ -64,5 +66,40 @@ export class LicenseController {
     @Param('id') id: number,
   ): Promise<ResponseDataDto> {
     return this.licenseService.getLicenseDepartment(id);
+  }
+
+  /*
+Get license details
+ */
+  @Get('details/:id')
+  async getLicenseDetails(@Param('id') id: number): Promise<ResponseDataDto> {
+    return this.licenseService.getLicenseDetails(id);
+  }
+
+  /*
+Add License metric for tool
+ */
+  @Put('metric/tool/audit/:id')
+  async addAuditMetricTool(
+    @Param('id') id: number,
+    @Body() toolMetricDto: AuditMetricDto,
+  ): Promise<ResponseDataDto> {
+    return this.licenseService.addLicenseToolMetric(id, toolMetricDto);
+  }
+
+  /*
+  Add tool metric
+   */
+  @Put(`addSystemTool/:licenseId/:systemId`)
+  async addMetricToTool(
+    @Param('licenseId') licenseId: number,
+    @Param('systemId') systemId: number,
+    @Body() licenseToolDto: LicenseToolDto,
+  ): Promise<ResponseDataDto> {
+    return this.licenseService.addSystemTool(
+      licenseId,
+      systemId,
+      licenseToolDto,
+    );
   }
 }

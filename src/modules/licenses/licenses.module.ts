@@ -7,6 +7,9 @@ import { LicenseRequest } from '../license-requests/entities/license-request.ent
 import { Vendor } from '../vendors/entities/vendor.entity';
 import { SystemTool } from '../system-tools/entities/system-tool.entity';
 import { DepartmentEntity } from '../departments/entities/department.entity';
+import { LicenseToolMetricEntity } from './entities/license-tool-metric.entity';
+import { LicenseToolEntity } from './entities/license-tool.entity';
+import { MetricEntity } from '../metric/entities/metric.entity';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { DepartmentEntity } from '../departments/entities/department.entity';
       Vendor,
       SystemTool,
       DepartmentEntity,
+      LicenseToolMetricEntity,
+      LicenseToolEntity,
+      MetricEntity,
     ]),
   ],
   providers: [LicenseService],
