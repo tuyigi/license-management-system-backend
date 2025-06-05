@@ -12,6 +12,7 @@ import { MetricEntity } from '../../metric/entities/metric.entity';
 import { SystemTool } from '../../system-tools/entities/system-tool.entity';
 import { ContractSystemToolEntity } from '../../contracts/entities/contract-system-tool.entity';
 import { LicenseToolEntity } from './license-tool.entity';
+import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
 
 @Entity('license_tool_metric')
 export class LicenseToolMetricEntity extends BaseEntity {
@@ -35,4 +36,8 @@ export class LicenseToolMetricEntity extends BaseEntity {
   created_at: Date;
   @UpdateDateColumn()
   updated_at: Date;
+  @Column({ enum: ApprovalStatusEnum, default: ApprovalStatusEnum.PENDING })
+  approval_status: ApprovalStatusEnum;
+  @Column({ nullable: true })
+  approval_comment: string;
 }
