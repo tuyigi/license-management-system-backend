@@ -174,6 +174,8 @@ export class ContractService {
       contract.department = department;
       contract.description = contractDto.description;
       contract.annual_license_fees = contractDto.annual_license_fees;
+      contract.start_date = new Date(Date.parse(`${contractDto.start_date}`));
+      contract.end_date = new Date(Date.parse(`${contractDto.end_date}`));
       await this.contractRepository.save(contract);
       return new ResponseDataDto(
         contract,

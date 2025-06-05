@@ -13,6 +13,8 @@ import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 import { AuditMetricDto } from '../../contracts/dtos/tool-metric.dto';
 import { LicenseToolDto } from '../dtos/license_tool.dto';
+import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
+import { ApprovalDto } from '../../contracts/enums/approval.dto';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('license')
@@ -101,5 +103,17 @@ Add License metric for tool
       systemId,
       licenseToolDto,
     );
+  }
+
+  /*
+Update Approval Status
+ */
+  @Put('/approvalStatus/:id/:status')
+  async updateApprovalStatus(
+    @Param('id') id: number,
+    @Param('status') status: ApprovalStatusEnum,
+    @Body() approvalDto: ApprovalDto,
+  ): Promise<ResponseDataDto> {
+    return this.licenseService.changeApprovalStatus(id, status, approvalDto);
   }
 }

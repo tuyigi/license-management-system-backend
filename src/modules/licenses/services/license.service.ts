@@ -17,6 +17,9 @@ import { LicenseToolMetricEntity } from '../entities/license-tool-metric.entity'
 import { MetricEntity } from '../../metric/entities/metric.entity';
 import { LicenseToolDto } from '../dtos/license_tool.dto';
 import { LicenseToolEntity } from '../entities/license-tool.entity';
+import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
+import { ApprovalDto } from '../../contracts/enums/approval.dto';
+import { Contract } from '../../contracts/entities/contract.entity';
 
 @Injectable()
 export class LicenseService {
@@ -203,7 +206,7 @@ export class LicenseService {
   async getLicenses(): Promise<ResponseDataDto> {
     const licenses: License[] = await this.licenseRepository.find({
       order: { created_at: 'DESC' },
-      relations: { vendor: true },
+      relations: { vendor: true, department_id: true, system_tool: true },
     });
     return new ResponseDataDto(
       licenses,
@@ -344,6 +347,33 @@ Get License details and Metrics
       return new ResponseDataDto(saved);
     } catch (e) {
       throw e;
+    }
+  }
+
+  /*
+Update Approval Status
+ */
+  async changeApprovalStatus(
+    id: number,
+    status: ApprovalStatusEnum,
+    approvalDto: ApprovalDto,
+  ): Promise<ResponseDataDto> {
+    try {
+      const license: License = await this.licenseRepository.findOne({
+        where: { id },
+      });
+      if (!license)
+        throw new NotFoundException(`Contract with ID: ${id} not found`);
+      license.approval_status = status;
+      license.approval_comment = approvalDto.comment;
+      await this.licenseRepository.save(license);
+      return new ResponseDataDto(
+        license,
+        200,
+        'Contract status changed successfully',
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message()}`);
     }
   }
 }
