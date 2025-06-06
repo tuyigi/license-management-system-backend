@@ -71,18 +71,24 @@ export class AuthService {
     return null;
   }
 
-  async checkDomainUser(username: string, password: string): Promise<any> {
+  async checkDomainUser(
+    username: string,
+    password: string,
+  ): Promise<ResponseDataDto> {
     const baseUrl = this.configService.get<string>(
       'LDAP_AUTHENTICATE_URL_TEST',
     );
     try {
       const response = await axios.post(baseUrl, { username, password });
       console.log(response.data.authenticated);
-      // Check if authentication was successful (adjust based on API response)
-      return response.status === 200;
+      return new ResponseDataDto(
+        response,
+        response.status,
+        response.data.message,
+      );
     } catch (error) {
       console.error('LDAP Authentication failed:', error.message);
-      throw new Error('Authentication failed');
+      return new ResponseDataDto(error, 401, error.message);
     }
   }
 }

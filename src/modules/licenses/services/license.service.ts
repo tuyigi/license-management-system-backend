@@ -376,4 +376,31 @@ Update Approval Status
       throw new BadRequestException(`${e.message()}`);
     }
   }
+
+  /*
+Update Approval Status
+ */
+  async changeEntitlementApprovalStatus(
+    id: number,
+    status: ApprovalStatusEnum,
+    approvalDto: ApprovalDto,
+  ): Promise<ResponseDataDto> {
+    try {
+      const license: License = await this.licenseRepository.findOne({
+        where: { id },
+      });
+      if (!license)
+        throw new NotFoundException(`Contract with ID: ${id} not found`);
+      license.approval_status = status;
+      license.approval_comment = approvalDto.comment;
+      await this.licenseRepository.save(license);
+      return new ResponseDataDto(
+        license,
+        200,
+        'Contract status changed successfully',
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message()}`);
+    }
+  }
 }
