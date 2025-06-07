@@ -255,7 +255,7 @@ Get License details and Metrics
       const rawQuery = `
           SELECT lst.id,lst.created_at,lst.updated_at,
                  ltm.id as license_system_tool_metric_id,ltm.entitlement,ltm.utilisation,ltm.license_gap,ltm.license_system_tool,
-                 ltm.metric,ltm.comment,   st.system_tool_name, st.description,st.department,m.name
+                 ltm.metric,ltm.comment,ltm.approval_status,ltm.approval_comment,  st.system_tool_name, st.description,st.department,m.name
           FROM license_system_tools lst
                    LEFT JOIN license_tool_metric ltm ON lst.id = ltm.license_system_tool
                    INNER JOIN system_tools st ON lst.system_tool = st.id
