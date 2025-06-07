@@ -8,7 +8,8 @@ import { User } from '../../users/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtRefreshTokenStrategy } from '../strategy/jwt-refresh-token.strategy';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
-import axios from "axios";
+
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -78,11 +79,10 @@ export class AuthService {
     try {
       const response = await axios.post(baseUrl, { username, password });
       console.log(response.data.authenticated);
-      // Check if authentication was successful (adjust based on API response)
       return response.status === 200;
     } catch (error) {
       console.error('LDAP Authentication failed:', error.message);
-      throw new Error('Authentication failed');
+      throw new UnauthorizedException('Invalid credentials');
     }
   }
 }

@@ -161,6 +161,8 @@ export class ContractService {
       contract.department = department;
       contract.description = contractDto.description;
       contract.annual_license_fees = contractDto.annual_license_fees;
+      contract.start_date = new Date(Date.parse(`${contractDto.start_date}`));
+      contract.end_date = new Date(Date.parse(`${contractDto.end_date}`));
       await this.contractRepository.save(contract);
       return new ResponseDataDto(
         contract,
@@ -201,9 +203,9 @@ export class ContractService {
    */
   async getContractDepartment(id: number): Promise<ResponseDataDto> {
     try {
+      /*    if (!contract)
       /*  const contract = await this.contractRepository.findOne({ where: { id } });
-      if (!contract)
-        throw new NotFoundException(`Contract with ID: ${id} not found`);*/
+      if (!contract)        throw new NotFoundException(`Contract with ID: ${id} not found`);*/
       const contracts = await this.contractRepository.find({
         where: { department: { id } },
         relations: {
