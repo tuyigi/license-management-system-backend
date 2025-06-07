@@ -5,17 +5,19 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DepartmentEntity } from '../../departments/entities/department.entity';
-import { Repository } from 'typeorm';
+import { Between, Raw, Repository } from 'typeorm';
 import { CertificateEntity } from '../entities/certificate.entity';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { CertificateDto } from '../dtos/certificate.dto';
 import { CertificateReportDto } from '../dtos/certificate-report.dto';
 import { User } from '../../users/entities/user.entity';
 import { CertificateReportEntity } from '../entities/certificate-report.entity';
+import { MailService } from '../../mail/mail.service';
 
 @Injectable()
 export class CertificatesService {
   constructor(
+    private readonly mailService: MailService,
     @InjectRepository(DepartmentEntity)
     private readonly departmentRepository: Repository<DepartmentEntity>,
     @InjectRepository(CertificateEntity)
@@ -240,5 +242,123 @@ export class CertificatesService {
     } catch (e) {
       throw e;
     }
+  }
+
+  /*
+    Upload Certificate
+   */
+  async uploadCertificate(
+    certificateDto: CertificateDto[],
+  ): Promise<ResponseDataDto> {
+    const savedCertificates = [];
+    try {
+      for (const dto of certificateDto) {
+        const department: DepartmentEntity =
+          await this.departmentRepository.findOne({
+            where: { id: dto.department_id },
+          });
+        if (!department)
+          throw new NotFoundException(
+            `Department with ID:${dto.department_id} not found`,
+          );
+        if (
+          new Date(`${dto.issue_date}`).getMilliseconds() >
+          new Date(`${dto.expiration_date}`).getMilliseconds()
+        )
+          throw new BadRequestException(
+            `Expiration date should be greater than issue date`,
+          );
+        const certificate: CertificateEntity = new CertificateEntity();
+        certificate.certificate = dto.certificate_name;
+        certificate.issue_date = new Date(Date.parse(`${dto.issue_date}`));
+        certificate.expiry_date = new Date(
+          Date.parse(`${dto.expiration_date}`),
+        );
+        certificate.certificate_type = dto.certificate_type;
+        certificate.department_id = department;
+        certificate.user_organization = dto.user_organization;
+        certificate.description = dto.description;
+        const saved = await this.certificateRepository.save(certificate);
+        savedCertificates.push(saved);
+      }
+      return new ResponseDataDto(
+        savedCertificates,
+        201,
+        'Certificate added successfully',
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
+    }
+  }
+
+  //Certificate Expiration reminders
+  async getReminders(id: number) {
+    const department: DepartmentEntity =
+      await this.departmentRepository.findOne({
+        where: { id },
+      });
+
+    if (!department) {
+      throw new NotFoundException(`Department with ID: ${id} not found`);
+    }
+
+    const expiringSoon = await this.certificateRepository.find({
+      where: {
+        department_id: { id: department.id },
+        expiry_date: Raw(
+          (alias) =>
+            `DATE(${alias}) BETWEEN CURRENT_DATE + INTERVAL '1 day' AND CURRENT_DATE + INTERVAL '15 days'`,
+        ),
+      },
+      relations: {
+        department_id: true,
+      },
+    });
+
+    return {
+      count: expiringSoon.length || 0,
+      items: expiringSoon || [],
+    };
+  }
+
+  //Fetch data for cron job
+  async getCertificateDataForCronJob() {
+    const certificatesData = await this.certificateRepository
+      .createQueryBuilder('certificates')
+      .leftJoinAndSelect('certificates.department_id', 'department')
+      .where('certificates.expiry_date::date - CURRENT_DATE = 15')
+      .select([
+        'certificates.id',
+        'certificates.certificate',
+        'certificates.expiry_date',
+        'department.id',
+        'department.department_email',
+      ])
+      .getMany();
+    await Promise.all(
+      certificatesData.map(async (certificateEntity) => {
+        const departmentID = certificateEntity.department_id?.id;
+
+        if (!departmentID) return;
+
+        const department = await this.departmentRepository.findOne({
+          where: { id: departmentID },
+          select: ['department_email'],
+        });
+
+        const certificate = certificateEntity.certificate;
+        const endDate = certificateEntity.expiry_date;
+        const departmentEmail = department?.department_email;
+        console.log({ certificate, endDate, departmentEmail });
+
+        if (departmentEmail) {
+          await this.mailService.sendCertificatesReminderEmail(
+            departmentEmail,
+            certificate,
+            endDate.toString(),
+          );
+        }
+      }),
+    );
   }
 }

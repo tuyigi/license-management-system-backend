@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -110,6 +111,45 @@ export class SystemToolService {
       return new ResponseDataDto(systemTools);
     } catch (e) {
       throw e;
+    }
+  }
+
+  /*
+Upload new System / tool
+ */
+
+  async uploadSystemTools(
+    systemToolDto: SystemToolDto[],
+  ): Promise<ResponseDataDto> {
+    const savedTools = [];
+    try {
+      for (const dto of systemToolDto) {
+        const department = await this.departmentRepository.findOne({
+          where: { id: dto.department },
+        });
+
+        if (!department) {
+          throw new NotFoundException(
+            `Department with ID ${dto.department} not found`,
+          );
+        }
+
+        const tool = new SystemTool();
+        tool.system_tool_name = dto.name;
+        tool.description = dto.description || '';
+        tool.department = department;
+
+        const saved = await this.systemToolRepository.save(tool);
+        savedTools.push(saved);
+      }
+
+      return new ResponseDataDto(
+        savedTools,
+        201,
+        `${savedTools.length} system tools saved successfully`,
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
     }
   }
 }

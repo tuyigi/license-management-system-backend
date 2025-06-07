@@ -56,4 +56,14 @@ export class VendorController {
   ) {
     return this.vendorService.changeVendorStatus(id, changeVendorStatusDto);
   }
+
+  /*
+Upload new Vendor
+*/
+  @Post('upload')
+  async uploadVendor(
+    @Body() data: RecordVendorDto[],
+  ): Promise<ResponseDataDto> {
+    return this.vendorService.uploadVendor(data);
+  }
 }

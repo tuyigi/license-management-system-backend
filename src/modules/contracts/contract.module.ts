@@ -14,10 +14,12 @@ import { User } from '../users/entities/user.entity';
 import { ContractSystemToolMetricEntity } from './entities/contract-system-tool-metric.entity';
 import { ComponentMetricEntity } from './entities/component-metric.entity';
 import { MetricEntity } from '../metric/entities/metric.entity';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     PaymentModule,
+    MailModule,
     TypeOrmModule.forFeature([
       Vendor,
       Contract,
@@ -34,5 +36,6 @@ import { MetricEntity } from '../metric/entities/metric.entity';
   ],
   providers: [ContractService],
   controllers: [ContractController],
+  exports: [ContractService],
 })
 export class ContractModule {}

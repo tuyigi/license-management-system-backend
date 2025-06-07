@@ -6,9 +6,11 @@ import { User } from '../users/entities/user.entity';
 import { CertificateReportEntity } from './entities/certificate-report.entity';
 import { CertificatesService } from './services/certificates.service';
 import { CertificatesController } from './controllers/certificates.controller';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
+    MailModule,
     TypeOrmModule.forFeature([
       DepartmentEntity,
       CertificateEntity,
@@ -18,5 +20,6 @@ import { CertificatesController } from './controllers/certificates.controller';
   ],
   providers: [CertificatesService],
   controllers: [CertificatesController],
+  exports: [CertificatesService],
 })
 export class CertificatesModule {}
