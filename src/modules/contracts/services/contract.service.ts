@@ -64,6 +64,13 @@ export class ContractService {
    */
   async createContract(contractDto: ContractDto): Promise<ResponseDataDto> {
     try {
+      const contracts: Contract = await this.contractRepository.findOne({
+        where: { contract_number: contractDto.contract_number },
+      });
+      if (contracts)
+        throw new ConflictException(
+          `Contract with number: ${contractDto.contract_number} already exists`,
+        );
       const vendor: Vendor = await this.vendorRepository.findOne({
         where: { id: contractDto.vendor },
       });
@@ -679,6 +686,13 @@ export class ContractService {
     const SavedContractsArray = [];
     try {
       for (const dto of contractDto) {
+        const contracts: Contract = await this.contractRepository.findOne({
+          where: { contract_number: dto.contract_number },
+        });
+        if (contracts)
+          throw new ConflictException(
+            `Contract with number: ${dto.contract_number} already exists`,
+          );
         const vendor: Vendor = await this.vendorRepository.findOne({
           where: { id: dto.vendor },
         });
@@ -718,6 +732,7 @@ export class ContractService {
         contract.vendor = vendor;
         contract.department = department;
         contract.description = dto.description;
+        contract.payment_frequency = dto.payment_frequency;
         contract.document_link = dto.document_link;
         contract.number_system_users = dto.number_system_users;
         contract.contract_number = dto.contract_number

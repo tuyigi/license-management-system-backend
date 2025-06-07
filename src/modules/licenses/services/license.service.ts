@@ -19,7 +19,6 @@ import { LicenseToolDto } from '../dtos/license_tool.dto';
 import { LicenseToolEntity } from '../entities/license-tool.entity';
 import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
 import { ApprovalDto } from '../../contracts/enums/approval.dto';
-import { Contract } from '../../contracts/entities/contract.entity';
 
 @Injectable()
 export class LicenseService {
@@ -139,6 +138,7 @@ export class LicenseService {
       });
       if (!license)
         throw new NotFoundException(`License with id: ${id} not found`);
+
       const vendor: Vendor = await this.vendorRepository.findOne({
         where: { id: updateLicenseDto.vendor },
       });
@@ -162,6 +162,13 @@ export class LicenseService {
       if (!system)
         throw new NotFoundException(
           `System Tool with ID: ${updateLicenseDto.system_tool}`,
+        );
+      if (
+        new Date(`${start_date}`).getMilliseconds() >
+        new Date(`${end_date}`).getMilliseconds()
+      )
+        throw new BadRequestException(
+          `End date should be greater than start date`,
         );
       license.name = name;
       license.code = code;
@@ -196,7 +203,7 @@ export class LicenseService {
     });
     if (!license)
       throw new NotFoundException(`License with id: ${id} not found`);
-    return new ResponseDataDto(license, 200, `License retrieved succcessfully`);
+    return new ResponseDataDto(license, 200, `License retrieved successfully`);
   }
 
   /*
@@ -401,6 +408,78 @@ Update Approval Status
       );
     } catch (e) {
       throw new BadRequestException(`${e.message()}`);
+    }
+  }
+
+  //UPLOAD LICENSES
+  async uploadLicense(
+    createLicenceDtos: CreateLicenceDto[],
+  ): Promise<ResponseDataDto> {
+    const SavedLicensesArray = [];
+    try {
+      for (const dto of createLicenceDtos) {
+        const licenses: License = await this.licenseRepository.findOne({
+          where: { code: dto.code, name: dto.name },
+        });
+        if (licenses)
+          throw new ConflictException(
+            `License with code: ${dto.code} or name: ${dto.name} already exists`,
+          );
+        const vendor: Vendor = await this.vendorRepository.findOne({
+          where: { id: dto.vendor },
+        });
+        if (!vendor)
+          throw new NotFoundException(
+            `Vendor with ID: ${dto.vendor} doesn't exist`,
+          );
+        const department: DepartmentEntity =
+          await this.departmentRepository.findOne({
+            where: {
+              id: dto.department,
+            },
+          });
+        if (!department)
+          throw new NotFoundException(
+            `Department with ID: ${dto.department} doesn't exist`,
+          );
+        const system: SystemTool = await this.systemToolRepository.findOne({
+          where: { id: dto.system_tool },
+        });
+        if (!system)
+          throw new NotFoundException(
+            `System Tool with ID: ${dto.system_tool}`,
+          );
+
+        if (
+          new Date(`${dto.start_date}`).getMilliseconds() >
+          new Date(`${dto.end_date}`).getMilliseconds()
+        )
+          throw new BadRequestException(
+            `End date should be greater than start date`,
+          );
+        const license: License = new License();
+        license.name = dto.name;
+        license.code = dto.code;
+        license.description = dto.description;
+        license.vendor = vendor;
+        license.department_id = department;
+        license.system_tool = system;
+        license.license_fees = dto.license_fees;
+        license.payment_frequency = dto.payment_frequency;
+        license.number_system_users = dto.number_system_users;
+        license.currency = dto.currency;
+        license.start_date = new Date(`${dto.start_date}`);
+        license.end_date = new Date(`${dto.end_date}`);
+        const savedLicense = await this.licenseRepository.save(license);
+        SavedLicensesArray.push(savedLicense);
+      }
+      return new ResponseDataDto(
+        SavedLicensesArray,
+        201,
+        `Licenses uploaded successfully`,
+      );
+    } catch (e) {
+      throw new BadRequestException(`${e.message}`);
     }
   }
 }

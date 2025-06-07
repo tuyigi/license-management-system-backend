@@ -116,4 +116,14 @@ Update Approval Status
   ): Promise<ResponseDataDto> {
     return this.licenseService.changeApprovalStatus(id, status, approvalDto);
   }
+
+  /*
+Upload License
+ */
+  @Post('upload')
+  async uploadLicenses(
+    @Body() data: CreateLicenceDto[],
+  ): Promise<ResponseDataDto> {
+    return this.licenseService.uploadLicense(data);
+  }
 }
