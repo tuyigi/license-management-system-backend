@@ -182,6 +182,7 @@ export class LicenseService {
       license.currency = currency;
       license.start_date = new Date(`${start_date}`);
       license.end_date = new Date(`${end_date}`);
+      license.approval_status = ApprovalStatusEnum.PENDING;
       const savedLicense = await this.licenseRepository.save(license);
       return new ResponseDataDto(
         savedLicense,
