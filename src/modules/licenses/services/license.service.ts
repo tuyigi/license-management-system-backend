@@ -378,7 +378,7 @@ Update Approval Status
       return new ResponseDataDto(
         license,
         200,
-        'Contract status changed successfully',
+        'License status changed successfully',
       );
     } catch (e) {
       throw new BadRequestException(`${e.message()}`);

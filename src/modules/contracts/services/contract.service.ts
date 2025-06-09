@@ -262,15 +262,19 @@ export class ContractService {
       await this.contractRepository.save(contract);
       const email = departmentEmail?.department_email;
       const contract_no = contractNumber?.contract_number;
-      await this.mailService.sendFeedbackEmail(
+      /*    await this.mailService.sendFeedbackEmail(
         email,
         status,
         contract_no,
         approvalDto.comment,
+      );*/
+      return new ResponseDataDto(
+        contract,
+        200,
+        `contract's status updated successfully`,
       );
-      return contract;
     } catch (e) {
-      throw new BadRequestException(`${e.message()}`);
+      throw new BadRequestException(`${e.message}`);
     }
   }
 
