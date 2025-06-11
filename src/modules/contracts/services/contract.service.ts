@@ -840,4 +840,29 @@ Get All Contracts Tool Metrics by department
       }),
     );
   }
+
+  async getCombinedSystemTools(id: number): Promise<ResponseDataDto> {
+    try {
+      const rawQuery = `
+    SELECT st1.system_tool_name, l.start_date, l.end_date
+    FROM licenses l
+    INNER JOIN system_tools st1 ON l.system_tool = st1.id
+    WHERE l.department = $1
+    AND l.approval_status = 'APPROVED'
+    UNION
+    SELECT st.system_tool_name, c.start_date, c.end_date
+    FROM contracts c
+    INNER JOIN contract_system_tools cst ON c.id = cst.contract
+    INNER JOIN system_tools st ON cst.system_tool = st.id
+    WHERE c.department = $1
+    AND c.approval_status = 'APPROVED'`;
+      const results = await this.contractRepository.query(rawQuery, [id]);
+      const response = {
+        toolsExpiration: results,
+      };
+      return new ResponseDataDto(response);
+    } catch (e) {
+      throw e;
+    }
+  }
 }
