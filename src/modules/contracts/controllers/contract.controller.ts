@@ -239,4 +239,14 @@ export class ContractController {
   async getContractsRemindersByDepartment(@Param('id') id: number) {
     return this.contractService.getContractsRemindersByDepartment(id);
   }
+
+  /*
+  Get all tools expiration by department
+   */
+  @Get('tool/expiration/:id')
+  async getCombinedSystemTools(
+    @Param('id') id: number,
+  ): Promise<ResponseDataDto> {
+    return this.contractService.getCombinedSystemTools(id);
+  }
 }

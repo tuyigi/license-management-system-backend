@@ -64,6 +64,13 @@ export class ContractService {
    */
   async createContract(contractDto: ContractDto): Promise<ResponseDataDto> {
     try {
+      const contracts: Contract = await this.contractRepository.findOne({
+        where: { contract_number: contractDto.contract_number },
+      });
+      if (contracts)
+        throw new ConflictException(
+          `Contract with number: ${contractDto.contract_number} already exists`,
+        );
       const vendor: Vendor = await this.vendorRepository.findOne({
         where: { id: contractDto.vendor },
       });
@@ -255,15 +262,19 @@ export class ContractService {
       await this.contractRepository.save(contract);
       const email = departmentEmail?.department_email;
       const contract_no = contractNumber?.contract_number;
-      await this.mailService.sendFeedbackEmail(
+      /*    await this.mailService.sendFeedbackEmail(
         email,
         status,
         contract_no,
         approvalDto.comment,
+      );*/
+      return new ResponseDataDto(
+        contract,
+        200,
+        `contract's status updated successfully`,
       );
-      return contract;
     } catch (e) {
-      throw new BadRequestException(`${e.message()}`);
+      throw new BadRequestException(`${e.message}`);
     }
   }
 
@@ -679,6 +690,13 @@ export class ContractService {
     const SavedContractsArray = [];
     try {
       for (const dto of contractDto) {
+        const contracts: Contract = await this.contractRepository.findOne({
+          where: { contract_number: dto.contract_number },
+        });
+        if (contracts)
+          throw new ConflictException(
+            `Contract with number: ${dto.contract_number} already exists`,
+          );
         const vendor: Vendor = await this.vendorRepository.findOne({
           where: { id: dto.vendor },
         });
@@ -718,6 +736,7 @@ export class ContractService {
         contract.vendor = vendor;
         contract.department = department;
         contract.description = dto.description;
+        contract.payment_frequency = dto.payment_frequency;
         contract.document_link = dto.document_link;
         contract.number_system_users = dto.number_system_users;
         contract.contract_number = dto.contract_number
@@ -820,5 +839,30 @@ Get All Contracts Tool Metrics by department
         }
       }),
     );
+  }
+
+  async getCombinedSystemTools(id: number): Promise<ResponseDataDto> {
+    try {
+      const rawQuery = `
+    SELECT st1.system_tool_name, l.start_date, l.end_date
+    FROM licenses l
+    INNER JOIN system_tools st1 ON l.system_tool = st1.id
+    WHERE l.department = $1
+    AND l.approval_status = 'APPROVED'
+    UNION
+    SELECT st.system_tool_name, c.start_date, c.end_date
+    FROM contracts c
+    INNER JOIN contract_system_tools cst ON c.id = cst.contract
+    INNER JOIN system_tools st ON cst.system_tool = st.id
+    WHERE c.department = $1
+    AND c.approval_status = 'APPROVED'`;
+      const results = await this.contractRepository.query(rawQuery, [id]);
+      const response = {
+        toolsExpiration: results,
+      };
+      return new ResponseDataDto(response);
+    } catch (e) {
+      throw e;
+    }
   }
 }

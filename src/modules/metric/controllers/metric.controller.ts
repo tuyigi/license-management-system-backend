@@ -1,8 +1,18 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { MetricService } from '../services/metric.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { MetricDto } from '../dtos/metric.dto';
+import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
 
+@UseGuards(new JwtAuthGuard())
 @Controller('metric')
 export class MetricController {
   constructor(private readonly metricService: MetricService) {}

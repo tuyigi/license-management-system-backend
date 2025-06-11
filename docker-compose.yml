@@ -4,7 +4,7 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: ${DB_USERNAME}  # Use values from .env
+      POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
@@ -19,20 +19,20 @@ services:
     depends_on:
       - postgres_db
     environment:
-      DATABASE_URL: "postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres_db:${DB_PORT}/${DB_NAME}"  # Use values from .env
+      DATABASE_URL: "postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres_db:${DB_PORT}/${DB_NAME}"
     ports:
       - "8000:8000"
 
   react_frontend:
     build:
-      context: ../license-management-system-frontend  # Adjust this path if needed
+      context: ../license-management-system-frontend
       dockerfile: Dockerfile
     container_name: react_frontend
     restart: always
     depends_on:
       - nest_backend
     environment:
-      REACT_APP_API_URL: "http://nest_backend:8000"  # Ensure frontend connects to backend inside Docker network
+      REACT_APP_API_URL: "http://nest_backend:8000"
     ports:
       - "3000:3000"
 volumes:
