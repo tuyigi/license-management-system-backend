@@ -43,7 +43,7 @@ export class AuthService {
     }
     const user = await this.validateUser(username2);
     if (!user) {
-      throw new UnauthorizedException('Invalid username');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const payload = { sub: user.id, username: user.username };

@@ -170,6 +170,7 @@ export class ContractService {
       contract.annual_license_fees = contractDto.annual_license_fees;
       contract.start_date = new Date(Date.parse(`${contractDto.start_date}`));
       contract.end_date = new Date(Date.parse(`${contractDto.end_date}`));
+      contract.approval_status = ApprovalStatusEnum.PENDING;
       await this.contractRepository.save(contract);
       return new ResponseDataDto(
         contract,

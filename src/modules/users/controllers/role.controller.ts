@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { RoleService } from '../services/role.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { CreateRoleDto } from '../dtos/create-role.dto';
@@ -74,7 +83,7 @@ export class RoleController {
  */
   @Get('/privileges/:id')
   async getAssignedPrivilege(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.roleService.getAssignedPrivileges(id);
   }

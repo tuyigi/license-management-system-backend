@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ReportService } from '../services/report.service';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { JwtAuthGuard } from '../../authentication/guards/jwt-auth.guard';
@@ -75,17 +82,19 @@ export class ReportController {
   /*
    Get total contract per department
    */
-  @Get(`/totalContractDepartment/:id`)
-  async getTotalDepartment(@Param('id') id: number): Promise<ResponseDataDto> {
+  @Get('totalContractDepartment/:id')
+  async getTotalDepartment(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ResponseDataDto> {
     return this.reportService.getTotalDepartment(id);
   }
 
   /*
   Get contract period payments summary of specific department
    */
-  @Get(`/contractPeriodPayments/:id`)
+  @Get('/contractPeriodPayments/:id')
   async getContractPeriodPayments(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.reportService.getContractPeriodPayments(id);
   }
@@ -95,7 +104,7 @@ export class ReportController {
    */
   @Get('/certificatesDepartment/:id')
   async getCertificateNumbers(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.reportService.getCertificateNumbers(id);
   }

@@ -1,8 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Res,
@@ -39,7 +42,7 @@ export class ContractController {
    */
   @Put('/:id')
   async updateContract(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() contractDto: ContractDto,
   ): Promise<ResponseDataDto> {
     return this.contractService.updateContract(id, contractDto);
@@ -53,7 +56,7 @@ export class ContractController {
     return this.contractService.getContracts();
   }
   /*
-  Generate payment batches of a contract 
+  Generate payment batches of a contract
    */
   // @Get('payment/:id')
   // async generatePaymentBatches(
@@ -102,15 +105,17 @@ export class ContractController {
   /*
   Get contract by department
    */
-  @Get(`department/:id`)
+
+  @Get('department/:id')
   async getContractDepartment(
-    @Param('id') id: number,
-  ): Promise<ResponseDataDto> {
+    @Param('id', ParseIntPipe)
+    id: number,
+  ) {
     return this.contractService.getContractDepartment(id);
   }
 
   /*
-  add system tool to contract 
+  add system tool to contract
  */
   @Put(`addSystemTool/:contractId/:systemId`)
   async addSystemToContract(
@@ -126,7 +131,7 @@ export class ContractController {
   }
 
   /*
-  remove system tool on contract 
+  remove system tool on contract
   */
   @Put(`removeSystemTool/:contractId/:systemId`)
   async removeSystemOnContract(
@@ -225,9 +230,15 @@ export class ContractController {
   /*
   Get All Contracts System Tool Metrics by Department
    */
-  @Get(`tool/metric/department/:id`)
+  @Get('tool/metric/department/:id')
   async getContractSystemToolMetrics(
-    @Param('id') id: number,
+    @Param(
+      'id',
+      new ParseIntPipe({
+        exceptionFactory: () => new BadRequestException('Invalid numeric ID'),
+      }),
+    )
+    id: number,
   ): Promise<ResponseDataDto> {
     return this.contractService.getContractsToolsDepartment(id);
   }
@@ -245,7 +256,7 @@ export class ContractController {
    */
   @Get('tool/expiration/:id')
   async getCombinedSystemTools(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.contractService.getCombinedSystemTools(id);
   }

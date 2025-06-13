@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   UseGuards,
@@ -65,7 +66,7 @@ export class LicenseController {
    */
   @Get(`department/:id`)
   async getLicenseDepartment(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.licenseService.getLicenseDepartment(id);
   }
@@ -74,7 +75,9 @@ export class LicenseController {
 Get license details
  */
   @Get('details/:id')
-  async getLicenseDetails(@Param('id') id: number): Promise<ResponseDataDto> {
+  async getLicenseDetails(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ResponseDataDto> {
     return this.licenseService.getLicenseDetails(id);
   }
 

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   UseGuards,
@@ -41,7 +42,7 @@ export class CertificatesController {
    */
   @Get('department/:id')
   async getDepartmentCertificates(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.certificateService.getCertificateDepartment(id);
   }
