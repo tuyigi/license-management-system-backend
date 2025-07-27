@@ -69,4 +69,6 @@ export class Contract {
   approval_status: ApprovalStatusEnum;
   @Column({ nullable: true })
   approval_comment: string;
+  @Column({ nullable: true })
+  updated_by: number;
 }

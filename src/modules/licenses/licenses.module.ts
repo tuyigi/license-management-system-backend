@@ -10,9 +10,12 @@ import { DepartmentEntity } from '../departments/entities/department.entity';
 import { LicenseToolMetricEntity } from './entities/license-tool-metric.entity';
 import { LicenseToolEntity } from './entities/license-tool.entity';
 import { MetricEntity } from '../metric/entities/metric.entity';
+import { MailModule } from '../mail/mail.module';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
+    MailModule,
     TypeOrmModule.forFeature([
       License,
       LicenseRequest,
@@ -22,6 +25,7 @@ import { MetricEntity } from '../metric/entities/metric.entity';
       LicenseToolMetricEntity,
       LicenseToolEntity,
       MetricEntity,
+      User,
     ]),
   ],
   providers: [LicenseService],

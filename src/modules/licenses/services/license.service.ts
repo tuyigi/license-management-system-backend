@@ -19,6 +19,8 @@ import { LicenseToolDto } from '../dtos/license_tool.dto';
 import { LicenseToolEntity } from '../entities/license-tool.entity';
 import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
 import { ApprovalDto } from '../../contracts/enums/approval.dto';
+import { MailService } from '../../mail/mail.service';
+import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class LicenseService {
@@ -37,6 +39,9 @@ export class LicenseService {
     private readonly metricRepository: Repository<MetricEntity>,
     @InjectRepository(LicenseToolEntity)
     private readonly licenseToolEntityRepository: Repository<LicenseToolEntity>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly mailService: MailService,
   ) {}
 
   /*
@@ -57,6 +62,7 @@ export class LicenseService {
         currency,
         start_date,
         end_date,
+        updated_by,
       } = createLicenceDto;
       let license: License = await this.licenseRepository.findOne({
         where: { code, name },
@@ -102,6 +108,7 @@ export class LicenseService {
       license.currency = currency;
       license.start_date = new Date(`${start_date}`);
       license.end_date = new Date(`${end_date}`);
+      license.updated_by = updated_by;
       const savedLicense = await this.licenseRepository.save(license);
       return new ResponseDataDto(
         savedLicense,
@@ -132,6 +139,7 @@ export class LicenseService {
         currency,
         start_date,
         end_date,
+        updated_by,
       } = updateLicenseDto;
       const license: License = await this.licenseRepository.findOne({
         where: { id },
@@ -182,6 +190,7 @@ export class LicenseService {
       license.currency = currency;
       license.start_date = new Date(`${start_date}`);
       license.end_date = new Date(`${end_date}`);
+      license.updated_by = updated_by;
       license.approval_status = ApprovalStatusEnum.PENDING;
       const savedLicense = await this.licenseRepository.save(license);
       return new ResponseDataDto(
@@ -372,9 +381,35 @@ Update Approval Status
       });
       if (!license)
         throw new NotFoundException(`Contract with ID: ${id} not found`);
+
+      const licenseName: License = await this.licenseRepository.findOne({
+        where: { id },
+        select: ['name'],
+      });
+      const userOnLicense: License = await this.licenseRepository.findOne({
+        where: { id },
+        select: ['updated_by'],
+      });
+      const userId = userOnLicense?.updated_by;
+      const userEmail = await this.userRepository.findOne({
+        where: { id: userId },
+        select: ['email'],
+      });
       license.approval_status = status;
       license.approval_comment = approvalDto.comment;
       await this.licenseRepository.save(license);
+      const email = userEmail?.email;
+      const nameofLicense = licenseName?.name;
+      this.mailService
+        .sendLicenseFeedbackEmail(
+          email,
+          status,
+          nameofLicense,
+          approvalDto.comment,
+        )
+        .catch((err) => {
+          console.error('Email sending failed:', err);
+        });
       return new ResponseDataDto(
         license,
         200,

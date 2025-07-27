@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -45,6 +46,10 @@ export class CertificatesController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.certificateService.getCertificateDepartment(id);
+  }
+  @Get('department/:id/*')
+  async handleExtraSegmentsDepartmentCertificates(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
   }
 
   /*

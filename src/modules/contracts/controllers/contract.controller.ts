@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -105,13 +104,16 @@ export class ContractController {
   /*
   Get contract by department
    */
-
-  @Get('department/:id')
+  @Get(`department/:id`)
   async getContractDepartment(
-    @Param('id', ParseIntPipe)
-    id: number,
-  ) {
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ResponseDataDto> {
     return this.contractService.getContractDepartment(id);
+  }
+
+  @Get('department/:id/*')
+  async handleExtraSegmentsContractDepartment(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
   }
 
   /*
@@ -154,11 +156,14 @@ export class ContractController {
   /*
   Get contract details
    */
-  @Get('/:id')
+  @Get('details/:id')
   async getContractDetails(@Param('id') id: number): Promise<ResponseDataDto> {
     return this.contractService.getContractDetails(id);
   }
-
+  @Get('details/:id/*')
+  async handleExtraSegmentsContractDetails(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
+  }
   /*
   Add reminder
    */
@@ -232,15 +237,13 @@ export class ContractController {
    */
   @Get('tool/metric/department/:id')
   async getContractSystemToolMetrics(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        exceptionFactory: () => new BadRequestException('Invalid numeric ID'),
-      }),
-    )
-    id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.contractService.getContractsToolsDepartment(id);
+  }
+  @Get('tool/metric/department/:id/*')
+  async handleExtraSegmentsContractSystemToolMetrics(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
   }
 
   /*
@@ -259,5 +262,9 @@ export class ContractController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.contractService.getCombinedSystemTools(id);
+  }
+  @Get('tool/expiration/:id/*')
+  async handleExtraSegmentsCombinedSystemTools(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
   }
 }

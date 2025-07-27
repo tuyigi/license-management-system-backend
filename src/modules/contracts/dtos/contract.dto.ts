@@ -1,10 +1,4 @@
-import {
-  IsArray,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { CurrencyEnum } from '../../../common/enums/currency.enum';
 import { PaymentFrequencyEnum } from '../../../common/enums/payment-frequency.enum';
 import { Column } from 'typeorm';
@@ -14,8 +8,8 @@ export class ContractDto {
   vendor: number;
   @IsNumber()
   department: number;
-  @IsArray({ message: 'System tools should be valid' })
-  system_tools: number[];
+  /*  @IsArray({ message: 'System tools should be valid' })
+  system_tools: number[];*/
   // @IsNumber()
   // system_tools: number;
   @IsOptional()
@@ -41,4 +35,7 @@ export class ContractDto {
   @IsNumber()
   @IsOptional()
   number_system_users: number;
+  @IsOptional()
+  @IsNumber()
+  updated_by: number;
 }

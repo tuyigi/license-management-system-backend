@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Param,
@@ -88,25 +89,36 @@ export class ReportController {
   ): Promise<ResponseDataDto> {
     return this.reportService.getTotalDepartment(id);
   }
+  @Get('totalContractDepartment/:id/*')
+  async handleExtraSegmentTotalDepartment(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
+  }
 
   /*
   Get contract period payments summary of specific department
    */
-  @Get('/contractPeriodPayments/:id')
+  @Get('contractPeriodPayments/:id')
   async getContractPeriodPayments(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.reportService.getContractPeriodPayments(id);
   }
-
+  @Get('contractPeriodPayments/:id/*')
+  async handleExtraSegmentContractPeriodPayments(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
+  }
   /*
   Get numbers of certificates in specific department
    */
-  @Get('/certificatesDepartment/:id')
+  @Get('certificatesDepartment/:id')
   async getCertificateNumbers(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.reportService.getCertificateNumbers(id);
+  }
+  @Get('certificatesDepartment/:id/*')
+  async handleExtraSegmentCertificatesDepartment(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
   }
 
   /*

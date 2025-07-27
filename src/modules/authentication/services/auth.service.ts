@@ -1,4 +1,9 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SigninDto } from '../dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/services/users.service';
@@ -22,36 +27,24 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
   ) {}
+
   async signIn(signinDto: SigninDto): Promise<ResponseDataDto> {
+    const user = await this.validateUser(signinDto.username);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const domainUsername = `bnr\\${signinDto.username}`;
     const isAuthenticated = await this.checkDomainUser(
-      signinDto.username,
+      domainUsername,
       signinDto.password,
     );
     if (!isAuthenticated) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const username1 = signinDto.username;
-    const index = username1.lastIndexOf('\\'); // Find the last index of the backslash character
-
-    let username2: string;
-    if (index !== -1) {
-      // Extract the substring after the last backslash
-      username2 = username1.substring(index + 1);
-    } else {
-      // If no backslash is found, use the whole string as the username
-      username2 = username1;
-    }
-    const user = await this.validateUser(username2);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
     const payload = { sub: user.id, username: user.username };
-    const accessToken = await this.jwtService.signAsync(payload);
-    // const refreshToken = await this.jwtService.signAsync(payload, {
-    //   expiresIn: '1d',
-    // });
-
+    const accessToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '2h',
+    });
     const responseData: { user: any; access_token: string } = {
       user,
       access_token: accessToken,
@@ -64,12 +57,16 @@ export class AuthService {
   }
 
   async validateUser(username: string): Promise<any> {
-    const user = await this.usersService.findByUsername(username);
-    if (user) {
-      const { ...result } = user;
-      return result;
+    try {
+      const user = await this.usersService.findByUsername(username);
+      if (user) {
+        return { ...user };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error in validateUser:', error.message);
+      throw new InternalServerErrorException('Failed to validate user');
     }
-    return null;
   }
 
   async checkDomainUser(username: string, password: string): Promise<any> {
@@ -77,7 +74,11 @@ export class AuthService {
       'LDAP_AUTHENTICATE_URL_TEST',
     );
     try {
-      const response = await axios.post(baseUrl, { username, password });
+      const response = await axios.post(
+        baseUrl,
+        { username, password },
+        { timeout: 1000 },
+      );
       console.log(response.data.authenticated);
       return response.status === 200;
     } catch (error) {

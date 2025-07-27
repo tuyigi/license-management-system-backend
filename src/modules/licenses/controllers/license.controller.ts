@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -70,6 +71,10 @@ export class LicenseController {
   ): Promise<ResponseDataDto> {
     return this.licenseService.getLicenseDepartment(id);
   }
+  @Get('department/:id/*')
+  async handleExtraSegmentLicenseDepartment(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
+  }
 
   /*
 Get license details
@@ -81,6 +86,10 @@ Get license details
     return this.licenseService.getLicenseDetails(id);
   }
 
+  @Get('details/:id/*')
+  async handleExtraSegmentLicenseDetails(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
+  }
   /*
 Add License metric for tool
  */

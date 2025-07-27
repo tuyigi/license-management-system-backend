@@ -115,6 +115,7 @@ export class ContractService {
       contract.contract_number = contractDto.contract_number
         ? contractDto.contract_number
         : contractNumber;
+      contract.updated_by = contractDto.updated_by;
       const savedContract = await this.contractRepository.save(contract);
       await this.paymentService.generateBatches(savedContract.id);
       return new ResponseDataDto(
@@ -133,11 +134,23 @@ export class ContractService {
 
   async updateContract(
     id: number,
-    contractDto: ContractDto,
+    updateContractDto: ContractDto,
   ): Promise<ResponseDataDto> {
     try {
+      const {
+        contract_number,
+        document_link,
+        description,
+        start_date,
+        end_date,
+        annual_license_fees,
+        currency,
+        number_system_users,
+        payment_frequency,
+        updated_by,
+      } = updateContractDto;
       const vendor: Vendor = await this.vendorRepository.findOne({
-        where: { id: contractDto.vendor },
+        where: { id: updateContractDto.vendor },
       });
       if (!vendor)
         throw new NotFoundException(`Vendor with ID: ${id} doesn't exist`);
@@ -145,12 +158,12 @@ export class ContractService {
       const department: DepartmentEntity =
         await this.departmentRepository.findOne({
           where: {
-            id: contractDto.department,
+            id: updateContractDto.department,
           },
         });
       if (!department)
         throw new NotFoundException(
-          `Department with ID: ${contractDto.department} doesn't exist`,
+          `Department with ID: ${updateContractDto.department} doesn't exist`,
         );
       const contract: Contract = await this.contractRepository.findOne({
         where: { id },
@@ -158,22 +171,31 @@ export class ContractService {
       if (!contract) {
         throw new NotFoundException(`Contract with ID: ${id} not found`);
       }
+      if (
+        new Date(`${start_date}`).getMilliseconds() >
+        new Date(`${end_date}`).getMilliseconds()
+      )
+        throw new BadRequestException(
+          `End date should be greater than start date`,
+        );
 
       // update contract
-      contract.contract_number = contractDto.contract_number;
-      contract.document_link = contractDto.document_link;
-      contract.currency = contractDto.currency;
-      contract.payment_frequency = contractDto.payment_frequency;
+      contract.contract_number = contract_number;
+      contract.document_link = document_link;
+      contract.currency = currency;
+      contract.payment_frequency = payment_frequency;
       contract.vendor = vendor;
+      contract.number_system_users = number_system_users;
       contract.department = department;
-      contract.description = contractDto.description;
-      contract.annual_license_fees = contractDto.annual_license_fees;
-      contract.start_date = new Date(Date.parse(`${contractDto.start_date}`));
-      contract.end_date = new Date(Date.parse(`${contractDto.end_date}`));
+      contract.description = description;
+      contract.annual_license_fees = annual_license_fees;
+      contract.start_date = new Date(Date.parse(`${start_date}`));
+      contract.end_date = new Date(Date.parse(`${end_date}`));
       contract.approval_status = ApprovalStatusEnum.PENDING;
-      await this.contractRepository.save(contract);
+      contract.updated_by = updated_by;
+      const savedContract = await this.contractRepository.save(contract);
       return new ResponseDataDto(
-        contract,
+        savedContract,
         200,
         `Contract updated successfully`,
       );
@@ -246,29 +268,32 @@ export class ContractService {
         where: { id },
         select: ['contract_number'],
       });
-      const contractDepartment: Contract =
-        await this.contractRepository.findOne({
-          where: { id },
-          select: ['department'],
-        });
-      const contractDepartmentId = contractDepartment?.department?.id;
-      const departmentEmail = await this.departmentEntityRepository.findOne({
-        where: { id: contractDepartmentId },
-        select: ['department_email'],
+      const userOnContract: Contract = await this.contractRepository.findOne({
+        where: { id },
+        select: ['updated_by'],
+      });
+      const userId = userOnContract?.updated_by;
+      const userEmail = await this.userRepository.findOne({
+        where: { id: userId },
+        select: ['email'],
       });
       if (!contract)
         throw new NotFoundException(`Contract with ID: ${id} not found`);
       contract.approval_status = status;
       contract.approval_comment = approvalDto.comment;
       await this.contractRepository.save(contract);
-      const email = departmentEmail?.department_email;
+      const email = userEmail?.email;
       const contract_no = contractNumber?.contract_number;
-      /*    await this.mailService.sendFeedbackEmail(
-        email,
-        status,
-        contract_no,
-        approvalDto.comment,
-      );*/
+      this.mailService
+        .sendContractFeedbackEmail(
+          email,
+          status,
+          contract_no,
+          approvalDto.comment,
+        )
+        .catch((err) => {
+          console.error('Email sending failed:', err);
+        });
       return new ResponseDataDto(
         contract,
         200,

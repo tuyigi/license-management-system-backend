@@ -40,4 +40,7 @@ export class CreateLicenceDto {
   @IsNumber()
   @IsOptional()
   number_system_users: number;
+  @IsOptional()
+  @IsNumber()
+  updated_by: number;
 }

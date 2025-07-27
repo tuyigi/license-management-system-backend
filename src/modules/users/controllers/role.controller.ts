@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -81,10 +82,15 @@ export class RoleController {
   /*
   get assigned privilege to a specific role
  */
-  @Get('/privileges/:id')
+  @Get('privileges/:id')
   async getAssignedPrivilege(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseDataDto> {
     return this.roleService.getAssignedPrivileges(id);
+  }
+
+  @Get('privileges/:id/*')
+  async handleExtraSegmentAssignedPrivilege(@Param('id') id: string) {
+    throw new BadRequestException(`Invalid parameter.`);
   }
 }
