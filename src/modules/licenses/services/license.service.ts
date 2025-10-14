@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { License } from '../entities/license.entity';
-import { Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import { CreateLicenceDto } from '../dtos/create_license.dto';
 import { ResponseDataDto } from '../../../common/dtos/response-data.dto';
 import { Vendor } from '../../vendors/entities/vendor.entity';
@@ -21,6 +21,7 @@ import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
 import { ApprovalDto } from '../../contracts/enums/approval.dto';
 import { MailService } from '../../mail/mail.service';
 import { User } from '../../users/entities/user.entity';
+import { UserType } from '../../../common/enums/user_type.enum';
 
 @Injectable()
 export class LicenseService {
@@ -95,6 +96,17 @@ export class LicenseService {
         throw new NotFoundException(
           `System Tool with ID: ${createLicenceDto.system_tool}`,
         );
+      const getManagerDetails: User = await this.userRepository.findOne({
+        where: {
+          department: { id: createLicenceDto.department },
+          user_type: UserType.CONTRACT_MANAGER,
+        },
+        relations: {
+          department: true,
+        },
+      });
+      const managerEmail = getManagerDetails?.email;
+      const managerName = getManagerDetails?.first_name;
       license = new License();
       license.name = name;
       license.code = code;
@@ -110,6 +122,11 @@ export class LicenseService {
       license.end_date = new Date(`${end_date}`);
       license.updated_by = updated_by;
       const savedLicense = await this.licenseRepository.save(license);
+      this.mailService
+        .sendLicenseUpdatesToManagerEmail(managerName, managerEmail, name)
+        .catch((err) => {
+          console.error('Email sending failed:', err);
+        });
       return new ResponseDataDto(
         savedLicense,
         201,
@@ -178,6 +195,17 @@ export class LicenseService {
         throw new BadRequestException(
           `End date should be greater than start date`,
         );
+      const getManagerDetails: User = await this.userRepository.findOne({
+        where: {
+          department: { id: updateLicenseDto.department },
+          user_type: UserType.CONTRACT_MANAGER,
+        },
+        relations: {
+          department: true,
+        },
+      });
+      const managerEmail = getManagerDetails?.email;
+      const managerName = getManagerDetails?.first_name;
       license.name = name;
       license.code = code;
       license.description = description;
@@ -193,6 +221,11 @@ export class LicenseService {
       license.updated_by = updated_by;
       license.approval_status = ApprovalStatusEnum.PENDING;
       const savedLicense = await this.licenseRepository.save(license);
+      this.mailService
+        .sendLicenseUpdatesToManagerEmail(managerName, managerEmail, name)
+        .catch((err) => {
+          console.error('Email sending failed:', err);
+        });
       return new ResponseDataDto(
         savedLicense,
         201,
@@ -517,5 +550,34 @@ Update Approval Status
     } catch (e) {
       throw new BadRequestException(`${e.message}`);
     }
+  }
+
+  async getLicenseReminders(id: number) {
+    const department: DepartmentEntity =
+      await this.departmentRepository.findOne({
+        where: { id },
+      });
+
+    if (!department) {
+      throw new NotFoundException(`Department with ID: ${id} not found`);
+    }
+
+    const expiringSoon = await this.licenseRepository.find({
+      where: {
+        department_id: { id: department.id },
+        end_date: Raw(
+          (alias) =>
+            `DATE(${alias}) BETWEEN CURRENT_DATE + INTERVAL '1 day' AND CURRENT_DATE + INTERVAL '15 days'`,
+        ),
+      },
+      relations: {
+        department_id: true,
+      },
+    });
+
+    return {
+      count: expiringSoon.length || 0,
+      items: expiringSoon || [],
+    };
   }
 }

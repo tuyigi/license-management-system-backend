@@ -17,6 +17,7 @@ import { AuditMetricDto } from '../../contracts/dtos/tool-metric.dto';
 import { LicenseToolDto } from '../dtos/license_tool.dto';
 import { ApprovalStatusEnum } from '../../../common/enums/approval-status.enum';
 import { ApprovalDto } from '../../contracts/enums/approval.dto';
+import { License } from '../entities/license.entity';
 
 @UseGuards(new JwtAuthGuard())
 @Controller('license')
@@ -137,5 +138,13 @@ Upload License
     @Body() data: CreateLicenceDto[],
   ): Promise<ResponseDataDto> {
     return this.licenseService.uploadLicense(data);
+  }
+
+  //Licenses Expiration reminders
+  @Get('reminders/department/:id')
+  async getLicenseReminders(
+    @Param('id') id: number,
+  ): Promise<{ count: number; items: License[] }> {
+    return this.licenseService.getLicenseReminders(id);
   }
 }

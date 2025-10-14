@@ -33,7 +33,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const domainUsername = `bnr\\${signinDto.username}`;
+    const domainUsername = `bnrw\\${signinDto.username}`;
     const isAuthenticated = await this.checkDomainUser(
       domainUsername,
       signinDto.password,

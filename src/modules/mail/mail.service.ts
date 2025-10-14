@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import * as process from 'node:process';
 
 @Injectable()
 export class MailService {
   private transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
+    port: parseInt(process.env.SMTP_PORT),
     secure: false,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
   });
-
   async sendContractFeedbackEmail(
     email: string,
     status: string,
@@ -67,6 +67,34 @@ export class MailService {
       to: email,
       subject: 'CERTIFICATES EXPIRATION REMINDER',
       text: `Dear Team,\nKindly note that the certificate  ${certificate} expires on ${endDate}.`,
+    };
+    await this.transporter.sendMail(mailOptions);
+  }
+  //Contract update to manager
+  async sendContractUpdatesToManagerEmail(
+    name: string,
+    email: string,
+    contract_no: string,
+  ): Promise<void> {
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: 'LICENSE CONTRACT UPDATES',
+      text: `Dear ${name},\nKindly note that the contract with contract number ${contract_no} has been updated.`,
+    };
+    await this.transporter.sendMail(mailOptions);
+  }
+  //License update to manager
+  async sendLicenseUpdatesToManagerEmail(
+    name: string,
+    email: string,
+    licenseName: string,
+  ): Promise<void> {
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: 'LICENSE UPDATES',
+      text: `Dear ${name},\nKindly note that the license with name : ${licenseName}  has been updated.`,
     };
     await this.transporter.sendMail(mailOptions);
   }

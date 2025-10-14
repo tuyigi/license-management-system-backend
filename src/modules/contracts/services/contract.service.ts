@@ -27,6 +27,7 @@ import { ComponentMetricEntity } from '../entities/component-metric.entity';
 import { MetricEntity } from '../../metric/entities/metric.entity';
 import { AuditMetricDto } from '../dtos/tool-metric.dto';
 import { MailService } from '../../mail/mail.service';
+import { UserType } from '../../../common/enums/user_type.enum';
 
 @Injectable()
 export class ContractService {
@@ -102,6 +103,17 @@ export class ContractService {
         department: { id: contractDto.department },
         vendor: { id: contractDto.vendor },
       });
+      const getManagerDetails: User = await this.userRepository.findOne({
+        where: {
+          department: { id: contractDto.department },
+          user_type: UserType.CONTRACT_MANAGER,
+        },
+        relations: {
+          department: true,
+        },
+      });
+      const managerEmail = getManagerDetails?.email;
+      const managerName = getManagerDetails?.first_name;
       const contractNumber = `BNR/${contractDto.department}/${vendor.vendor_name}/${counter}`;
       contract.start_date = new Date(Date.parse(`${contractDto.start_date}`));
       contract.end_date = new Date(Date.parse(`${contractDto.end_date}`));
@@ -118,6 +130,15 @@ export class ContractService {
       contract.updated_by = contractDto.updated_by;
       const savedContract = await this.contractRepository.save(contract);
       await this.paymentService.generateBatches(savedContract.id);
+      this.mailService
+        .sendContractUpdatesToManagerEmail(
+          managerEmail,
+          managerName,
+          contract.contract_number,
+        )
+        .catch((err) => {
+          console.error('Email sending failed:', err);
+        });
       return new ResponseDataDto(
         savedContract,
         201,
@@ -178,7 +199,17 @@ export class ContractService {
         throw new BadRequestException(
           `End date should be greater than start date`,
         );
-
+      const getManagerDetails: User = await this.userRepository.findOne({
+        where: {
+          department: { id: updateContractDto.department },
+          user_type: UserType.CONTRACT_MANAGER,
+        },
+        relations: {
+          department: true,
+        },
+      });
+      const managerEmail = getManagerDetails?.email;
+      const managerName = getManagerDetails?.first_name;
       // update contract
       contract.contract_number = contract_number;
       contract.document_link = document_link;
@@ -194,6 +225,15 @@ export class ContractService {
       contract.approval_status = ApprovalStatusEnum.PENDING;
       contract.updated_by = updated_by;
       const savedContract = await this.contractRepository.save(contract);
+      this.mailService
+        .sendContractUpdatesToManagerEmail(
+          managerName,
+          managerEmail,
+          contract.contract_number,
+        )
+        .catch((err) => {
+          console.error('Email sending failed:', err);
+        });
       return new ResponseDataDto(
         savedContract,
         200,
